@@ -36,8 +36,10 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
             startInfo.WorkingDirectory = Path.GetDirectoryName(processFileName);
             startInfo.FileName = processFileName;
             startInfo.Verb = "runas";
-            startInfo.Arguments = Environment.CommandLine.Substring(
-                Environment.CommandLine.IndexOf(' '));
+            // Preserve original arguments if present; otherwise pass none
+            var cmd = Environment.CommandLine;
+            int firstSpace = cmd.IndexOf(' ');
+            startInfo.Arguments = firstSpace >= 0 ? cmd.Substring(firstSpace) : string.Empty;
             Process.Start(startInfo);
         }
 

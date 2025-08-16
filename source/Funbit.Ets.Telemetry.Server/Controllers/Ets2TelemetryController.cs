@@ -35,8 +35,9 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
                     return reader.ReadToEnd();
             }
 
-            // otherwise return real data from the simulator
-            return JsonConvert.SerializeObject(Ets2TelemetryDataReader.Instance.Read(), JsonHelper.RestSettings);
+            // otherwise return real data from the simulator using SCS SDK reader and REST v1 schema
+            var v1 = ScsTelemetryDataReader.Instance.Read();
+            return JsonConvert.SerializeObject(v1, JsonHelper.RestSettings);
         }
         
         [HttpGet]

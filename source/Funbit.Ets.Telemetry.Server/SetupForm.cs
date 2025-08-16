@@ -89,16 +89,19 @@ namespace Funbit.Ets.Telemetry.Server
                     // we have to restart the setup with Administrator privileges
                     Uac.RestartElevated();
                     DialogResult = DialogResult.Abort;
+                    // exit current process once elevated instance is launched
+                    Environment.Exit(0);
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex);
-                }
-                finally
-                {
-                    // if succeeded or user declined elevation 
-                    // then we just exit from the current process
-                    Environment.Exit(0);
+                    MessageBox.Show(this,
+                        @"Administrative privileges are required to configure firewall/URL ACL." +
+                        Environment.NewLine +
+                        @"Please run the server as Administrator.",
+                        @"Elevation required", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    DialogResult = DialogResult.Abort;
+                    return;
                 }
             }
             

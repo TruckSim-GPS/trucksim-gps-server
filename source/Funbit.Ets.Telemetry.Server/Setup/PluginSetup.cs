@@ -111,9 +111,9 @@ namespace Funbit.Ets.Telemetry.Server.Setup
         class GameState
         {
             const string InstallationSkippedPath = "N/A";
-            const string TelemetryDllName = "ets2-telemetry-server.dll";
-            const string TelemetryX64DllMd5 = "aeffffe2e6c3c4fd6ef1ad1eb44171cd";
-            const string TelemetryX86DllMd5 = "ab473bea2dd9480e249133ec908e8252";
+            const string TelemetryDllName = "trucksim-gps-telemetry.dll";
+            const string TelemetryX64DllMd5 = "90bfd9519f9251afdf4ff131839efbd9";
+            const string TelemetryX86DllMd5 = "1f94471a3698a372064f73e6168d6711";
 
             readonly string _gameName;
 
@@ -203,10 +203,16 @@ namespace Funbit.Ets.Telemetry.Server.Setup
             }
 
             static string LocalEts2X86TelemetryPluginDllFileName => Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory, @"Ets2Plugins\win_x86\plugins\", TelemetryDllName);
+                AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x86\plugins", TelemetryDllName);
 
             static string LocalEts2X64TelemetryPluginDllFileName => Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory, @"Ets2Plugins\win_x64\plugins", TelemetryDllName);
+                AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x64\plugins", TelemetryDllName);
+
+            static string FindLocalTelemetryPluginDll(bool x64)
+            {
+                var arch = x64 ? "win_x64" : "win_x86";
+                return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TruckSimGPSPlugins", arch, "plugins", TelemetryDllName);
+            }
             
             static string GetPluginPath(string gamePath, bool x64)
             {

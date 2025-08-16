@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Funbit.Ets.Telemetry.Server</RootNamespace>
     <AssemblyName>Ets2Telemetry</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -126,18 +126,62 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
+  <!-- Ensure plugin DLLs are copied next to the EXE under TruckSimGPSPlugins/... -->
+  <ItemGroup>
+    <Content Include="..\..\server\TruckSimGPSPlugins\win_x64\plugins\trucksim-gps-telemetry.dll">
+      <Link>TruckSimGPSPlugins\win_x64\plugins\trucksim-gps-telemetry.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\server\TruckSimGPSPlugins\win_x86\plugins\trucksim-gps-telemetry.dll">
+      <Link>TruckSimGPSPlugins\win_x86\plugins\trucksim-gps-telemetry.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <!-- Link SCSSdkClient (C#) from the plugin repo for shared memory parsing -->
+  <ItemGroup>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SharedMemory.cs">
+      <Link>SCSSdkClient\SharedMemory.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SCSSdkConvert.cs">
+      <Link>SCSSdkClient\SCSSdkConvert.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SCSSdkTelemetry.cs">
+      <Link>SCSSdkClient\SCSSdkTelemetry.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SCSGame.cs">
+      <Link>SCSSdkClient\SCSGame.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\ShifterType.cs">
+      <Link>SCSSdkClient\ShifterType.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\AuxLevel.cs">
+      <Link>SCSSdkClient\AuxLevel.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\JobMarket.cs">
+      <Link>SCSSdkClient\JobMarket.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\Extension.cs">
+      <Link>SCSSdkClient\Extension.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\Offence.cs">
+      <Link>SCSSdkClient\Offence.cs</Link>
+    </Compile>
+    <!-- Object model files -->
+    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\Object\*.cs">
+      <Link>SCSSdkClient\Object\%(FileName)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\Ets2AppController.cs" />
     <Compile Include="Controllers\Ets2TelemetryHub.cs" />
     <Compile Include="Controllers\StaticFileController.cs" />
     <Compile Include="Controllers\Ets2TelemetryController.cs" />
+    <!-- New SCS SDK reader + V1 models -->
+    <Compile Include="Data\ScsTelemetryDataReader.cs" />
+    <Compile Include="Data\TelemetryV1.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\Ets2ProcessHelper.cs" />
-    <Compile Include="Data\IEts2TelemetryData.cs" />
-    <Compile Include="Data\Reader\Ets2TelemetryStructure.cs" />
-    <Compile Include="Data\Ets2TelemetryDataReader.cs" />
-    <Compile Include="Data\Ets2TelemetryData.cs" />
-    <Compile Include="Data\Reader\SharedProcessMemory.cs" />
+    <!-- Legacy Funbit reader removed (migrated to SCSSdk) -->
     <Compile Include="Helpers\ExceptionExtensions.cs" />
     <Compile Include="Helpers\JsonHelper.cs" />
     <Compile Include="Helpers\KeyboardHelper.cs" />
@@ -166,14 +210,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="..\..\server\Ets2Plugins\win_x64\plugins\ets2-telemetry-server.dll">
-      <Link>Ets2Plugins\win_x64\plugins\ets2-telemetry-server.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\server\Ets2Plugins\win_x86\plugins\ets2-telemetry-server.dll">
-      <Link>Ets2Plugins\win_x86\plugins\ets2-telemetry-server.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <!-- Remove legacy Funbit plugin DLLs from distribution -->
     <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\images\donate-link.png">
       <Link>Html\images\donate-link.png</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:modding.scssoft.com)",
+      "WebFetch(domain:etcars.readthedocs.io)",
+      "WebFetch(domain:forum.scssoft.com)"
+    ],
+    "deny": []
+  }
+}

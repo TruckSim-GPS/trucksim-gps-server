@@ -156,7 +156,7 @@ namespace Funbit.Ets.Telemetry.Server
                     statusLabel.Text = @"Connected to Ets2TestTelemetry.json";
                     statusLabel.ForeColor = Color.DarkGreen;
                 } 
-                else if (Ets2ProcessHelper.IsEts2Running && Ets2TelemetryDataReader.Instance.IsConnected)
+                else if (Ets2ProcessHelper.IsEts2Running && ScsTelemetryDataReader.Instance.IsConnected)
                 {
                     statusLabel.Text = $"Connected to the simulator ({Ets2ProcessHelper.LastRunningGameName})";
                     statusLabel.ForeColor = Color.DarkGreen;
@@ -215,7 +215,7 @@ namespace Funbit.Ets.Telemetry.Server
             try
             {
                 broadcastTimer.Enabled = false;
-                await _broadcastHttpClient.PostAsJsonAsync(BroadcastUrl, Ets2TelemetryDataReader.Instance.Read());
+                await _broadcastHttpClient.PostAsJsonAsync(BroadcastUrl, ScsTelemetryDataReader.Instance.Read());
             }
             catch (Exception ex)
             {
