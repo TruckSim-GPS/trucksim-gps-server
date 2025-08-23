@@ -4,7 +4,7 @@ module Funbit.Ets.Telemetry {
 
     // if you change port number here make sure that 
     // you change it inside Ets2Telemetry.exe.config as well
-    var serverPort: number = 25555;
+    var serverPort: number = 31377;
 
     export interface IConfiguration {
         skins: ISkinConfiguration[];

@@ -2,7 +2,7 @@
 (function (Funbit) {
     (function (Ets) {
         (function (Telemetry) {
-            var serverPort = 25555;
+            var serverPort = 31377;
 
             var Strings = (function () {
                 function Strings() {

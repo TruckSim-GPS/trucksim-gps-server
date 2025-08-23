@@ -10,7 +10,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
     {
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
-        static readonly string FirewallRuleName = $"ETS2 TELEMETRY SERVER (PORT {ConfigurationManager.AppSettings["Port"]})";
+        static readonly string FirewallRuleName = $"TRUCKSIM GPS TELEMETRY SERVER (PORT {ConfigurationManager.AppSettings["Port"]})";
 
         SetupStatus _status;
 

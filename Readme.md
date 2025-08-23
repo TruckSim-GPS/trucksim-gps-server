@@ -13,7 +13,7 @@ This is a free Telemetry Web Server for [Euro Truck Simulator 2](http://www.euro
 
 ### Telemetry REST API
   
-    GET http://localhost:25555/api/ets2/telemetry
+    GET http://localhost:31377/api/ets2/telemetry
 
 Returns structured JSON object with the latest telemetry data read from the game: 
 
@@ -43,7 +43,7 @@ The state is updated upon every API call. You may use this REST API for your own
 Please note that GET responses may be cached by your HTTP client. To avoid caching you may use some random query string parameter or POST method which returns exactly the same result.
 
 ### HTML5 Mobile Dashboard Application
-    http://localhost:25555/
+    http://localhost:31377/
 
 This HTML5 dashboard application is designed for mobile and desktop browsers. You should be able to use the dashboard just by navigating to the URL in your Mobile Safari (iOS 8+), Android 4+ browsers (Default or Chrome) or any modern desktop browser. 
 
@@ -89,8 +89,8 @@ Android users may install the provided "Ets2 Dashboard" application. The APK fil
 ***Security notes***: The installation must be done only once and requires Administrator privileges. If you mind what exactly server does to the system at this point here is the detailed information:
 
 1. Tries to find your ETS2 game directory and copy ets2-telemetry-server.dll plugin there
-2. Creates a new Firewall rule for 25555 port named "ETS2 TELEMETRY SERVER (PORT 25555)" opened only for local subnet (i.e. it won't be visible from Internet, so you are safe)
-3. Creates a new ACL rule for HTTP URL bound on 25555 port for OWIN's HttpListener ([more details](http://msdn.microsoft.com/en-us/library/ms733768%28v=vs.110%29.aspx))
+2. Creates a new Firewall rule for 31377 port named "TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)" opened only for local subnet (i.e. it won't be visible from Internet, so you are safe)
+3. Creates a new ACL rule for HTTP URL bound on 31377 port for OWIN's HttpListener ([more details](http://msdn.microsoft.com/en-us/library/ms733768%28v=vs.110%29.aspx))
 4. Creates a new file for storing application settings inside "\Users\USERNAME\AppData\Local\Ets2 Telemetry Server".
 
 The server also reports everything to the log file (Ets2Telemetry.log), so you may see the details there as well.
