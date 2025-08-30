@@ -269,15 +269,32 @@ namespace Funbit.Ets.Telemetry.Server
                     return;
                 }
 
-                // FORCE setup to reconfigure by temporarily clearing problematic paths
+                // FORCE setup to reconfigure by temporarily clearing N/A paths
+                string originalEts2Path = Settings.Instance.Ets2GamePath;
                 string originalAtsPath = Settings.Instance.AtsGamePath;
+                Console.WriteLine($"SETUP DEBUG - Original ETS2 path: '{originalEts2Path}'");
                 Console.WriteLine($"SETUP DEBUG - Original ATS path: '{originalAtsPath}'");
+                
+                bool clearedPaths = false;
+                
+                if (originalEts2Path == "N/A")
+                {
+                    Console.WriteLine("SETUP DEBUG - Clearing ETS2 path to force reconfiguration");
+                    Settings.Instance.Ets2GamePath = null; // Clear to force setup
+                    clearedPaths = true;
+                }
                 
                 if (originalAtsPath == "N/A")
                 {
                     Console.WriteLine("SETUP DEBUG - Clearing ATS path to force reconfiguration");
                     Settings.Instance.AtsGamePath = null; // Clear to force setup
+                    clearedPaths = true;
+                }
+                
+                if (clearedPaths)
+                {
                     Settings.Instance.Save();
+                    Console.WriteLine("SETUP DEBUG - Cleared N/A paths, setup will now prompt for configuration");
                 }
 
                 // Temporarily disable the status timer to prevent interference
@@ -285,7 +302,10 @@ namespace Funbit.Ets.Telemetry.Server
 
                 try
                 {
-                    // Launch the setup form in install mode (same as initial setup)
+                    // Set the force setup flag for this session and future elevated sessions
+                    Program.ForceSetupMode = true;
+                    
+                    // Launch the setup form
                     var result = new SetupForm().ShowDialog(this);
                     
                     if (result == DialogResult.OK)

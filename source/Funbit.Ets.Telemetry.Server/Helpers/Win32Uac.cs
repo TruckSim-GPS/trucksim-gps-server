@@ -29,6 +29,11 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
     {
         public static void RestartElevated()
         {
+            RestartElevated(null);
+        }
+        
+        public static void RestartElevated(string additionalArgs)
+        {
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.UseShellExecute = true;
             string processFileName = Process.GetCurrentProcess().MainModule.FileName;
@@ -39,7 +44,8 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
             // Preserve original arguments if present; otherwise pass none
             var cmd = Environment.CommandLine;
             int firstSpace = cmd.IndexOf(' ');
-            startInfo.Arguments = firstSpace >= 0 ? cmd.Substring(firstSpace) : string.Empty;
+            string originalArgs = firstSpace >= 0 ? cmd.Substring(firstSpace) : string.Empty;
+            startInfo.Arguments = string.IsNullOrEmpty(additionalArgs) ? originalArgs : $"{originalArgs} {additionalArgs}".Trim();
             Process.Start(startInfo);
         }
 

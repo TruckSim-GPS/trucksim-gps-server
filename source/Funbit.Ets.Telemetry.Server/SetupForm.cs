@@ -87,7 +87,11 @@ namespace Funbit.Ets.Telemetry.Server
                 try
                 {
                     // we have to restart the setup with Administrator privileges
-                    Uac.RestartElevated();
+                    // Pass -rerunsetup flag if this was triggered manually
+                    if (Program.ForceSetupMode)
+                        Uac.RestartElevated("-rerunsetup");
+                    else
+                        Uac.RestartElevated();
                     DialogResult = DialogResult.Abort;
                     // exit current process once elevated instance is launched
                     Environment.Exit(0);

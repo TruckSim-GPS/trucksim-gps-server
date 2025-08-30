@@ -26,7 +26,12 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 var ets2State = new GameState(Ets2, Settings.Instance.Ets2GamePath);
                 var atsState = new GameState(Ats, Settings.Instance.AtsGamePath);
 
-                if (ets2State.IsPluginValid() && atsState.IsPluginValid())
+                if (Program.ForceSetupMode)
+                {
+                    // Force setup dialogs when manually triggered
+                    _status = SetupStatus.Uninstalled;
+                }
+                else if (ets2State.IsPluginValid() && atsState.IsPluginValid())
                 {
                     _status = SetupStatus.Installed;
                 }
@@ -46,35 +51,31 @@ namespace Funbit.Ets.Telemetry.Server.Setup
 
         public SetupStatus Install(IWin32Window owner)
         {
-            if (_status == SetupStatus.Installed)
-                return _status;
-
             try
             {
                 var ets2State = new GameState(Ets2, Settings.Instance.Ets2GamePath);
                 var atsState = new GameState(Ats, Settings.Instance.AtsGamePath);
 
-                if (!ets2State.IsPluginValid())
-                {
-                    ets2State.DetectPath();
-                    if (!ets2State.IsPathValid())
-                        ets2State.BrowserForValidPath(owner);
+                // Always process ETS2 - show confirmation dialog if valid, or detection dialog if invalid
+                ets2State.ConfigureGamePath(owner);
+                if (ets2State.IsPathValid() && ets2State.GamePath != "N/A")
                     ets2State.InstallPlugin();
-                }
 
-                if (!atsState.IsPluginValid())
-                {
-                    atsState.DetectPath();
-                    if (!atsState.IsPathValid())
-                        atsState.BrowserForValidPath(owner);
+                // Always process ATS - show confirmation dialog if valid, or detection dialog if invalid
+                atsState.ConfigureGamePath(owner);
+                if (atsState.IsPathValid() && atsState.GamePath != "N/A")
                     atsState.InstallPlugin();
-                }
                 
+                // Save the final paths (might have changed during configuration)
                 Settings.Instance.Ets2GamePath = ets2State.GamePath;
                 Settings.Instance.AtsGamePath = atsState.GamePath;
                 Settings.Instance.Save();
                 
-                _status = SetupStatus.Installed;
+                // Set final status based on whether both games are properly configured
+                if (ets2State.IsPluginValid() && atsState.IsPluginValid())
+                    _status = SetupStatus.Installed;
+                else
+                    _status = SetupStatus.Uninstalled;
             }
             catch (Exception ex)
             {
@@ -248,31 +249,92 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                         GamePath.Replace('/', '\\'), @"SteamApps\common\" + GameDirectoryName);
             }
 
-            public void BrowserForValidPath(IWin32Window owner)
+            public void ConfigureGamePath(IWin32Window owner)
             {
+                // If path is already valid and not skipped, ask user if they want to keep or change it
+                if (IsPathValid() && GamePath != InstallationSkippedPath && !string.IsNullOrEmpty(GamePath))
+                {
+                    var gameFullName = _gameName == "ETS2" ? "Euro Truck Simulator 2" : "American Truck Simulator";
+                    
+                    var confirmResult = MessageBox.Show(owner,
+                        $">>> {gameFullName} <<<" + Environment.NewLine +
+                        "Installation is currently configured at:" + Environment.NewLine + Environment.NewLine +
+                        GamePath + Environment.NewLine + Environment.NewLine +
+                        @"Do you want to keep using this installation path?" + Environment.NewLine + Environment.NewLine +
+                        @"[YES]    = Keep this path and continue" + Environment.NewLine +
+                        @"[NO]     = Browse for a different location",
+                        $"{gameFullName} Setup", MessageBoxButtons.YesNo, MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1);
+                    
+                    if (confirmResult == DialogResult.Yes)
+                    {
+                        // User wants to keep the current path
+                        return;
+                    }
+                    // User wants to change the path - clear current path first, then browse
+                    GamePath = null; // Clear current path so browse logic works
+                    BrowseForPath(owner);
+                    return;
+                }
+                
+                // Path is invalid, null, or user wants to change it - try auto-detection first
+                DetectPath();
+                if (!IsPathValid())
+                    ShowDetectionFailedAndBrowse(owner);
+            }
+            
+            void ShowDetectionFailedAndBrowse(IWin32Window owner)
+            {
+                var gameFullName = _gameName == "ETS2" ? "Euro Truck Simulator 2" : "American Truck Simulator";
+                
+                var detectionResult = MessageBox.Show(owner,
+                    $">>> {gameFullName} <<<" + Environment.NewLine +
+                    "Installation could not be automatically detected." + Environment.NewLine + Environment.NewLine +
+                    $"Do you want to manually locate your {gameFullName} installation?" + Environment.NewLine + Environment.NewLine +
+                    @"[YES]    = Browse to find installation folder" + Environment.NewLine +
+                    @"[NO]     = Skip this game (you can configure it later)",
+                    $"{gameFullName} Setup", MessageBoxButtons.YesNo, MessageBoxIcon.Information,
+                    MessageBoxDefaultButton.Button1);
+                    
+                if (detectionResult == DialogResult.No)
+                {
+                    GamePath = InstallationSkippedPath;
+                    return;
+                }
+                
+                BrowseForPath(owner);
+            }
+            
+            void BrowseForPath(IWin32Window owner)
+            {
+                var gameFullName = _gameName == "ETS2" ? "Euro Truck Simulator 2" : "American Truck Simulator";
+                
                 while (!IsPathValid())
                 {
-                    var result = MessageBox.Show(owner,
-                        @"Could not detect " + _gameName + @" game path. " +
-                        @"If you do not have this game installed press [Cancel] to skip, " + 
-                        @"otherwise press [OK] to select path manually." + Environment.NewLine + Environment.NewLine +
-                        @"For example:" + Environment.NewLine + @"D:\STEAM\SteamApps\common\" + 
-                        GameDirectoryName,
-                        @"Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation);
+                    var browser = new FolderBrowserDialog();
+                    browser.Description = $"Select {gameFullName} installation folder";
+                    browser.ShowNewFolderButton = false;
+                    var result = browser.ShowDialog(owner);
+                    
                     if (result == DialogResult.Cancel)
                     {
                         GamePath = InstallationSkippedPath;
                         return;
                     }
-                    var browser = new FolderBrowserDialog();
-                    browser.Description = @"Select " + _gameName + @" game path";
-                    browser.ShowNewFolderButton = false;
-                    result = browser.ShowDialog(owner);
-                    if (result == DialogResult.Cancel)
-                        Environment.Exit(1);
+                    
                     GamePath = browser.SelectedPath;
+                    
+                    if (!IsPathValid())
+                    {
+                        MessageBox.Show(owner,
+                            $">>> {gameFullName} <<<" + Environment.NewLine +
+                            "The selected folder does not appear to be a valid installation." + Environment.NewLine + Environment.NewLine +
+                            $"Please select the main {gameFullName} folder that contains 'base.scs' and 'bin' folder.",
+                            "Invalid Path", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
                 }
             }
+            
         }
     }
 }
