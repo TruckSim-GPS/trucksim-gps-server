@@ -157,7 +157,7 @@
             this.MinimizeBox = false;
             this.Name = "SetupForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ETS2/ATS Telemetry Server Setup";
+            this.Text = "TruckSim GPS Telemetry Server Setup";
             this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.SetupForm_FormClosing);
             this.Load += new System.EventHandler(this.SetupForm_Load);
@@ -168,7 +168,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pluginStatusImage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

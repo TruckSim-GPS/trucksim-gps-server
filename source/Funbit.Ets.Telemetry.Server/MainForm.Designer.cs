@@ -39,45 +39,45 @@
             this.interfacesDropDown = new System.Windows.Forms.ComboBox();
             this.networkInterfaceTitleLabel = new System.Windows.Forms.Label();
             this.serverIpTitleLabel = new System.Windows.Forms.Label();
-            this.appUrlLabel = new System.Windows.Forms.LinkLabel();
-            this.appUrlTitleLabel = new System.Windows.Forms.Label();
             this.statusLabel = new System.Windows.Forms.Label();
             this.statusTitleLabel = new System.Windows.Forms.Label();
+            this.appUrlLabel = new System.Windows.Forms.LinkLabel();
+            this.appUrlTitleLabel = new System.Windows.Forms.Label();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.ets2PathLabel = new System.Windows.Forms.Label();
+            this.ets2PluginStatusLabel = new System.Windows.Forms.Label();
+            this.atsPathLabel = new System.Windows.Forms.Label();
+            this.atsPluginStatusLabel = new System.Windows.Forms.Label();
             this.broadcastTimer = new System.Windows.Forms.Timer(this.components);
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.serverToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.rerunSetupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uninstallToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.websiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.donateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ets2PathTitleLabel = new System.Windows.Forms.Label();
-            this.ets2PathLabel = new System.Windows.Forms.Label();
-            this.ets2PluginStatusLabel = new System.Windows.Forms.Label();
             this.atsPathTitleLabel = new System.Windows.Forms.Label();
-            this.atsPathLabel = new System.Windows.Forms.Label();
-            this.atsPluginStatusLabel = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.contextMenuStrip.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
             this.menuStrip1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // trayIcon
             // 
-            this.trayIcon.BalloonTipTitle = "ETS2 Telemetry Server is running...";
+            this.trayIcon.BalloonTipTitle = "TruckSim GPS Telemetry Server is running...";
             this.trayIcon.ContextMenuStrip = this.contextMenuStrip;
             this.trayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("trayIcon.Icon")));
-            this.trayIcon.Text = "ETS2 Telemetry Server is running...";
+            this.trayIcon.Text = "TruckSim GPS Telemetry Server is running...";
             this.trayIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.trayIcon_MouseDoubleClick);
             // 
             // contextMenuStrip
             // 
-            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.closeToolStripMenuItem});
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.closeToolStripMenuItem });
             this.contextMenuStrip.Name = "contextMenuStrip";
             this.contextMenuStrip.Size = new System.Drawing.Size(104, 26);
             // 
@@ -113,12 +113,12 @@
             // ipAddressLabel
             // 
             this.ipAddressLabel.AutoSize = true;
-            this.ipAddressLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ipAddressLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.ipAddressLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ipAddressLabel.ForeColor = System.Drawing.Color.DarkBlue;
             this.ipAddressLabel.Location = new System.Drawing.Point(139, 131);
             this.ipAddressLabel.Name = "ipAddressLabel";
-            this.ipAddressLabel.Size = new System.Drawing.Size(95, 17);
+            this.ipAddressLabel.Size = new System.Drawing.Size(101, 17);
             this.ipAddressLabel.TabIndex = 21;
             this.ipAddressLabel.Text = "111.222.333.444";
             this.toolTip.SetToolTip(this.ipAddressLabel, "Use this IP address for mobile application (Android)");
@@ -155,105 +155,11 @@
             this.serverIpTitleLabel.TabIndex = 17;
             this.serverIpTitleLabel.Text = "Server IP:";
             // 
-            // appUrlLabel
-            // 
-            this.appUrlLabel.AutoSize = true;
-            this.appUrlLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.appUrlLabel.Location = new System.Drawing.Point(140, 125);
-            this.appUrlLabel.Name = "appUrlLabel";
-            this.appUrlLabel.Size = new System.Drawing.Size(72, 17);
-            this.appUrlLabel.TabIndex = 16;
-            this.appUrlLabel.TabStop = true;
-            this.appUrlLabel.Text = "appUrlLabel";
-            this.toolTip.SetToolTip(this.appUrlLabel, "Use this URL to view HTML5 mobile dashboard in desktop or mobile browsers (click " +
-        "to open)");
-            this.appUrlLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.appUrlLabel_LinkClicked);
-            // 
-            // appUrlTitleLabel
-            // 
-            this.appUrlTitleLabel.AutoSize = true;
-            this.appUrlTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.appUrlTitleLabel.Location = new System.Drawing.Point(18, 125);
-            this.appUrlTitleLabel.Name = "appUrlTitleLabel";
-            this.appUrlTitleLabel.Size = new System.Drawing.Size(107, 17);
-            this.appUrlTitleLabel.TabIndex = 15;
-            this.appUrlTitleLabel.Text = "Browser Test URL:";
-            // 
-            // ets2PathTitleLabel
-            // 
-            this.ets2PathTitleLabel.AutoSize = true;
-            this.ets2PathTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ets2PathTitleLabel.Location = new System.Drawing.Point(18, 25);
-            this.ets2PathTitleLabel.Name = "ets2PathTitleLabel";
-            this.ets2PathTitleLabel.Size = new System.Drawing.Size(40, 17);
-            this.ets2PathTitleLabel.TabIndex = 22;
-            this.ets2PathTitleLabel.Text = "ETS2:";
-            // 
-            // ets2PathLabel
-            // 
-            this.ets2PathLabel.AutoSize = false;
-            this.ets2PathLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ets2PathLabel.ForeColor = System.Drawing.Color.Purple;
-            this.ets2PathLabel.Location = new System.Drawing.Point(80, 45);
-            this.ets2PathLabel.Name = "ets2PathLabel";
-            this.ets2PathLabel.Size = new System.Drawing.Size(450, 17);
-            this.ets2PathLabel.AutoSize = true;
-            this.ets2PathLabel.TabIndex = 23;
-            this.ets2PathLabel.Text = "Directory: Not configured";
-            this.toolTip.SetToolTip(this.ets2PathLabel, "ETS2 installation directory");
-            // 
-            // ets2PluginStatusLabel
-            // 
-            this.ets2PluginStatusLabel.AutoSize = true;
-            this.ets2PluginStatusLabel.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ets2PluginStatusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.ets2PluginStatusLabel.Location = new System.Drawing.Point(70, 25);
-            this.ets2PluginStatusLabel.Name = "ets2PluginStatusLabel";
-            this.ets2PluginStatusLabel.Size = new System.Drawing.Size(120, 13);
-            this.ets2PluginStatusLabel.TabIndex = 24;
-            this.ets2PluginStatusLabel.Text = "Plugin: Not configured";
-            this.toolTip.SetToolTip(this.ets2PluginStatusLabel, "ETS2 plugin installation status");
-            // 
-            // atsPathTitleLabel
-            // 
-            this.atsPathTitleLabel.AutoSize = true;
-            this.atsPathTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.atsPathTitleLabel.Location = new System.Drawing.Point(18, 75);
-            this.atsPathTitleLabel.Name = "atsPathTitleLabel";
-            this.atsPathTitleLabel.Size = new System.Drawing.Size(35, 17);
-            this.atsPathTitleLabel.TabIndex = 25;
-            this.atsPathTitleLabel.Text = "ATS:";
-            // 
-            // atsPathLabel
-            // 
-            this.atsPathLabel.AutoSize = false;
-            this.atsPathLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.atsPathLabel.ForeColor = System.Drawing.Color.Purple;
-            this.atsPathLabel.Location = new System.Drawing.Point(80, 95);
-            this.atsPathLabel.Name = "atsPathLabel";
-            this.atsPathLabel.Size = new System.Drawing.Size(450, 17);
-            this.atsPathLabel.AutoSize = true;
-            this.atsPathLabel.TabIndex = 26;
-            this.atsPathLabel.Text = "Directory: Not configured";
-            this.toolTip.SetToolTip(this.atsPathLabel, "ATS installation directory");
-            // 
-            // atsPluginStatusLabel
-            // 
-            this.atsPluginStatusLabel.AutoSize = true;
-            this.atsPluginStatusLabel.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.atsPluginStatusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.atsPluginStatusLabel.Location = new System.Drawing.Point(65, 75);
-            this.atsPluginStatusLabel.Name = "atsPluginStatusLabel";
-            this.atsPluginStatusLabel.Size = new System.Drawing.Size(120, 13);
-            this.atsPluginStatusLabel.TabIndex = 27;
-            this.atsPluginStatusLabel.Text = "Plugin: Not configured";
-            this.toolTip.SetToolTip(this.atsPluginStatusLabel, "ATS plugin installation status");
-            // 
             // statusLabel
             // 
             this.statusLabel.AutoSize = true;
-            this.statusLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.statusLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.statusLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.statusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.statusLabel.Location = new System.Drawing.Point(141, 41);
             this.statusLabel.Name = "statusLabel";
@@ -271,6 +177,29 @@
             this.statusTitleLabel.TabIndex = 11;
             this.statusTitleLabel.Text = "Status:";
             // 
+            // appUrlLabel
+            // 
+            this.appUrlLabel.AutoSize = true;
+            this.appUrlLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.appUrlLabel.Location = new System.Drawing.Point(140, 125);
+            this.appUrlLabel.Name = "appUrlLabel";
+            this.appUrlLabel.Size = new System.Drawing.Size(72, 17);
+            this.appUrlLabel.TabIndex = 16;
+            this.appUrlLabel.TabStop = true;
+            this.appUrlLabel.Text = "appUrlLabel";
+            this.toolTip.SetToolTip(this.appUrlLabel, "Use this URL to view HTML5 mobile dashboard in desktop or mobile browsers (click " + "to open)");
+            this.appUrlLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.appUrlLabel_LinkClicked);
+            // 
+            // appUrlTitleLabel
+            // 
+            this.appUrlTitleLabel.AutoSize = true;
+            this.appUrlTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.appUrlTitleLabel.Location = new System.Drawing.Point(18, 125);
+            this.appUrlTitleLabel.Name = "appUrlTitleLabel";
+            this.appUrlTitleLabel.Size = new System.Drawing.Size(112, 17);
+            this.appUrlTitleLabel.TabIndex = 15;
+            this.appUrlTitleLabel.Text = "Browser Test URL:";
+            // 
             // toolTip
             // 
             this.toolTip.AutomaticDelay = 250;
@@ -279,6 +208,54 @@
             this.toolTip.ReshowDelay = 50;
             this.toolTip.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Info;
             // 
+            // ets2PathLabel
+            // 
+            this.ets2PathLabel.AutoSize = true;
+            this.ets2PathLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2PathLabel.ForeColor = System.Drawing.Color.Purple;
+            this.ets2PathLabel.Location = new System.Drawing.Point(80, 45);
+            this.ets2PathLabel.Name = "ets2PathLabel";
+            this.ets2PathLabel.Size = new System.Drawing.Size(149, 17);
+            this.ets2PathLabel.TabIndex = 23;
+            this.ets2PathLabel.Text = "Directory: Not configured";
+            this.toolTip.SetToolTip(this.ets2PathLabel, "ETS2 installation directory");
+            // 
+            // ets2PluginStatusLabel
+            // 
+            this.ets2PluginStatusLabel.AutoSize = true;
+            this.ets2PluginStatusLabel.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2PluginStatusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.ets2PluginStatusLabel.Location = new System.Drawing.Point(70, 25);
+            this.ets2PluginStatusLabel.Name = "ets2PluginStatusLabel";
+            this.ets2PluginStatusLabel.Size = new System.Drawing.Size(110, 13);
+            this.ets2PluginStatusLabel.TabIndex = 24;
+            this.ets2PluginStatusLabel.Text = "Plugin: Not configured";
+            this.toolTip.SetToolTip(this.ets2PluginStatusLabel, "ETS2 plugin installation status");
+            // 
+            // atsPathLabel
+            // 
+            this.atsPathLabel.AutoSize = true;
+            this.atsPathLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsPathLabel.ForeColor = System.Drawing.Color.Purple;
+            this.atsPathLabel.Location = new System.Drawing.Point(80, 95);
+            this.atsPathLabel.Name = "atsPathLabel";
+            this.atsPathLabel.Size = new System.Drawing.Size(149, 17);
+            this.atsPathLabel.TabIndex = 26;
+            this.atsPathLabel.Text = "Directory: Not configured";
+            this.toolTip.SetToolTip(this.atsPathLabel, "ATS installation directory");
+            // 
+            // atsPluginStatusLabel
+            // 
+            this.atsPluginStatusLabel.AutoSize = true;
+            this.atsPluginStatusLabel.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsPluginStatusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.atsPluginStatusLabel.Location = new System.Drawing.Point(65, 75);
+            this.atsPluginStatusLabel.Name = "atsPluginStatusLabel";
+            this.atsPluginStatusLabel.Size = new System.Drawing.Size(110, 13);
+            this.atsPluginStatusLabel.TabIndex = 27;
+            this.atsPluginStatusLabel.Text = "Plugin: Not configured";
+            this.toolTip.SetToolTip(this.atsPluginStatusLabel, "ATS plugin installation status");
+            // 
             // broadcastTimer
             // 
             this.broadcastTimer.Interval = 1000;
@@ -286,20 +263,16 @@
             // 
             // menuStrip1
             // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.serverToolStripMenu,
-            this.helpToolStripMenu});
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.serverToolStripMenu, this.helpToolStripMenu });
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(552, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(605, 24);
             this.menuStrip1.TabIndex = 12;
             this.menuStrip1.Text = "menuStrip1";
             // 
             // serverToolStripMenu
             // 
-            this.serverToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.rerunSetupToolStripMenuItem,
-            this.uninstallToolStripMenuItem});
+            this.serverToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.rerunSetupToolStripMenuItem, this.uninstallToolStripMenuItem });
             this.serverToolStripMenu.Name = "serverToolStripMenu";
             this.serverToolStripMenu.Size = new System.Drawing.Size(51, 20);
             this.serverToolStripMenu.Text = "Server";
@@ -320,35 +293,59 @@
             // 
             // helpToolStripMenu
             // 
-            this.helpToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.helpToolStripMenuItem,
-            this.donateToolStripMenuItem,
-            this.aboutToolStripMenuItem});
+            this.helpToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.websiteToolStripMenuItem, this.helpToolStripMenuItem, this.donateToolStripMenuItem, this.aboutToolStripMenuItem });
             this.helpToolStripMenu.Name = "helpToolStripMenu";
             this.helpToolStripMenu.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenu.Text = "Help";
             // 
+            // websiteToolStripMenuItem
+            // 
+            this.websiteToolStripMenuItem.Name = "websiteToolStripMenuItem";
+            this.websiteToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.websiteToolStripMenuItem.Text = "TruckSim GPS website";
+            this.websiteToolStripMenuItem.Click += new System.EventHandler(this.websiteToolStripMenuItem_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.helpToolStripMenuItem.Text = "Browse on Github";
             this.helpToolStripMenuItem.Click += new System.EventHandler(this.helpToolStripMenuItem_Click);
             // 
             // donateToolStripMenuItem
             // 
             this.donateToolStripMenuItem.Name = "donateToolStripMenuItem";
-            this.donateToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.donateToolStripMenuItem.Text = "Donate";
+            this.donateToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.donateToolStripMenuItem.Text = "Get support on Discord";
             this.donateToolStripMenuItem.Click += new System.EventHandler(this.donateToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Visible = false;
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // ets2PathTitleLabel
+            // 
+            this.ets2PathTitleLabel.AutoSize = true;
+            this.ets2PathTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2PathTitleLabel.Location = new System.Drawing.Point(18, 25);
+            this.ets2PathTitleLabel.Name = "ets2PathTitleLabel";
+            this.ets2PathTitleLabel.Size = new System.Drawing.Size(39, 17);
+            this.ets2PathTitleLabel.TabIndex = 22;
+            this.ets2PathTitleLabel.Text = "ETS2:";
+            // 
+            // atsPathTitleLabel
+            // 
+            this.atsPathTitleLabel.AutoSize = true;
+            this.atsPathTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsPathTitleLabel.Location = new System.Drawing.Point(18, 75);
+            this.atsPathTitleLabel.Name = "atsPathTitleLabel";
+            this.atsPathTitleLabel.Size = new System.Drawing.Size(32, 17);
+            this.atsPathTitleLabel.TabIndex = 25;
+            this.atsPathTitleLabel.Text = "ATS:";
             // 
             // groupBox2
             // 
@@ -382,20 +379,19 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ETS2/ATS Telemetry Server";
+            this.Text = "TruckSim GPS Telemetry Server";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.contextMenuStrip.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
@@ -420,6 +416,7 @@
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenu;
         private System.Windows.Forms.ToolStripMenuItem rerunSetupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uninstallToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem websiteToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem donateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;

@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Funbit.Ets.Telemetry.Server</RootNamespace>
-    <AssemblyName>Ets2Telemetry</AssemblyName>
+    <AssemblyName>TruckSimGPS</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
@@ -52,7 +52,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\app_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -210,50 +210,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <!-- Remove legacy Funbit plugin DLLs from distribution -->
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\images\donate-link.png">
-      <Link>Html\images\donate-link.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\jquery.signalR-2.2.0.min.js">
-      <Link>Html\scripts\jquery.signalR-2.2.0.min.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\dashboard.css">
-      <Link>Html\skins\template\dashboard.css</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\dashboard.html">
-      <Link>Html\skins\template\dashboard.html</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\dashboard.jpg">
-      <Link>Html\skins\template\dashboard.jpg</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\dashboard.js">
-      <Link>Html\skins\template\dashboard.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\images\bg-off.jpg">
-      <Link>Html\skins\template\images\bg-off.jpg</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\images\bg-on.jpg">
-      <Link>Html\skins\template\images\bg-on.jpg</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Ets2TestTelemetry.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\config.json">
-      <Link>Html\skins\default\config.json</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\template\config.json">
-      <Link>Html\skins\template\config.json</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="Resources\app_icon.ico" />
     <None Include="Resources\check-error.png" />
     <None Include="Resources\check-on.png" />
     <None Include="Resources\check-off.png" />
@@ -270,138 +230,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\dashboard-host.css">
-      <Link>Html\dashboard-host.css</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\dashboard-host.html">
-      <Link>Html\dashboard-host.html</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\images\app-icon.png">
-      <Link>Html\images\app-icon.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\images\disclosure.png">
-      <Link>Html\images\disclosure.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\images\menu-background.png">
-      <Link>Html\images\menu-background.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\index.css">
-      <Link>Html\index.css</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\index.html">
-      <Link>Html\index.html</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\app.js">
-      <Link>Html\scripts\app.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\config.js">
-      <Link>Html\scripts\config.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\dashboard-core.js">
-      <Link>Html\scripts\dashboard-core.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\doT.js">
-      <Link>Html\scripts\doT.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\jquery.min.js">
-      <Link>Html\scripts\jquery.min.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\scripts\menu.js">
-      <Link>Html\scripts\menu.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\dashboard.css">
-      <Link>Html\skins\default\dashboard.css</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\dashboard.html">
-      <Link>Html\skins\default\dashboard.html</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\dashboard.jpg">
-      <Link>Html\skins\default\dashboard.jpg</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\dashboard.js">
-      <Link>Html\skins\default\dashboard.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\bg-off.png">
-      <Link>Html\skins\default\images\bg-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\bg-on.png">
-      <Link>Html\skins\default\images\bg-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\blinker-left-off.png">
-      <Link>Html\skins\default\images\blinker-left-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\blinker-left-on.png">
-      <Link>Html\skins\default\images\blinker-left-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\blinker-right-off.png">
-      <Link>Html\skins\default\images\blinker-right-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\blinker-right-on.png">
-      <Link>Html\skins\default\images\blinker-right-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\cruise-off.png">
-      <Link>Html\skins\default\images\cruise-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\cruise-on.png">
-      <Link>Html\skins\default\images\cruise-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\highbeam-off.png">
-      <Link>Html\skins\default\images\highbeam-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\highbeam-on.png">
-      <Link>Html\skins\default\images\highbeam-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\lowbeam-off.png">
-      <Link>Html\skins\default\images\lowbeam-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\lowbeam-on.png">
-      <Link>Html\skins\default\images\lowbeam-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\parklights-off.png">
-      <Link>Html\skins\default\images\parklights-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\parklights-on.png">
-      <Link>Html\skins\default\images\parklights-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\trailer-off.png">
-      <Link>Html\skins\default\images\trailer-off.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Funbit.Ets.Telemetry.Mobile\www\skins\default\images\trailer-on.png">
-      <Link>Html\skins\default\images\trailer-on.png</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Html\cordova.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

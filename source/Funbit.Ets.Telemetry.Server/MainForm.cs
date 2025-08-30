@@ -199,7 +199,7 @@ namespace Funbit.Ets.Telemetry.Server
             ShowInTaskbar = WindowState != FormWindowState.Minimized;
             if (!ShowInTaskbar && trayIcon.Tag == null)
             {
-                trayIcon.ShowBalloonTip(1000, @"ETS2/ATS Telemetry Server", @"Double-click to restore.", ToolTipIcon.Info);
+                trayIcon.ShowBalloonTip(1000, @"TruckSim GPS Telemetry Server", @"Double-click to restore.", ToolTipIcon.Info);
                 trayIcon.Tag = "Already shown";
             }
         }
@@ -241,14 +241,19 @@ namespace Funbit.Ets.Telemetry.Server
             Application.Exit();
         }
 
+        void websiteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessHelper.OpenUrl("https://trucksimgps.com/");
+        }
+
         void donateToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ProcessHelper.OpenUrl("http://funbit.info/ets2/donate.htm");
+            ProcessHelper.OpenUrl("https://discord.gg/RdC99Er37U");
         }
 
         void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ProcessHelper.OpenUrl("https://github.com/Funbit/ets2-telemetry-server");
+            ProcessHelper.OpenUrl("https://github.com/TruckSim-GPS/trucksim-gps-server");
         }
 
         void aboutToolStripMenuItem_Click(object sender, EventArgs e)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -26,12 +27,12 @@ namespace Funbit.Ets.Telemetry.Server
             // check if another instance is running
             CreateMutex(0, -1,
                 Uac.IsProcessElevated()
-                    ? "Ets2Telemetry_8F63CCBE353DE22BD1A86308AD675001_UAC"
-                    : "Ets2Telemetry_8F63CCBE353DE22BD1A86308AD675001");
+                    ? "TruckSimGPS_B2F7A93E1D4C58E092F3B6A8CD459127_UAC"
+                    : "TruckSimGPS_B2F7A93E1D4C58E092F3B6A8CD459127");
             bool bAnotherInstanceRunning = GetLastError() == ErrorAlreadyExists;
             if (bAnotherInstanceRunning)
             {
-                MessageBox.Show(@"Another ETS2/ATS Telemetry Server instance is already running!", @"Warning",
+                MessageBox.Show(@"Another TruckSim GPS Telemetry Server instance is already running!", @"Warning",
                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
