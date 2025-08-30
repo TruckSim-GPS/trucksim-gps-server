@@ -277,21 +277,27 @@ namespace Funbit.Ets.Telemetry.Server
                 // FORCE setup to reconfigure by temporarily clearing N/A paths
                 string originalEts2Path = Settings.Instance.Ets2GamePath;
                 string originalAtsPath = Settings.Instance.AtsGamePath;
+#if DEBUG
                 Console.WriteLine($"SETUP DEBUG - Original ETS2 path: '{originalEts2Path}'");
                 Console.WriteLine($"SETUP DEBUG - Original ATS path: '{originalAtsPath}'");
+#endif
                 
                 bool clearedPaths = false;
                 
                 if (originalEts2Path == "N/A")
                 {
+#if DEBUG
                     Console.WriteLine("SETUP DEBUG - Clearing ETS2 path to force reconfiguration");
+#endif
                     Settings.Instance.Ets2GamePath = null; // Clear to force setup
                     clearedPaths = true;
                 }
                 
                 if (originalAtsPath == "N/A")
                 {
+#if DEBUG
                     Console.WriteLine("SETUP DEBUG - Clearing ATS path to force reconfiguration");
+#endif
                     Settings.Instance.AtsGamePath = null; // Clear to force setup
                     clearedPaths = true;
                 }
@@ -299,7 +305,9 @@ namespace Funbit.Ets.Telemetry.Server
                 if (clearedPaths)
                 {
                     Settings.Instance.Save();
+#if DEBUG
                     Console.WriteLine("SETUP DEBUG - Cleared N/A paths, setup will now prompt for configuration");
+#endif
                 }
 
                 // Temporarily disable the status timer to prevent interference
@@ -315,7 +323,9 @@ namespace Funbit.Ets.Telemetry.Server
                     
                     if (result == DialogResult.OK)
                     {
+#if DEBUG
                         Console.WriteLine("SETUP DEBUG - Setup completed successfully");
+#endif
                         // Refresh the status display immediately after successful setup
                         statusUpdateTimer_Tick(this, EventArgs.Empty);
                         // Try auto-correction after setup in case there were manual installs
@@ -323,7 +333,9 @@ namespace Funbit.Ets.Telemetry.Server
                     }
                     else
                     {
+#if DEBUG
                         Console.WriteLine("SETUP DEBUG - Setup was cancelled or failed");
+#endif
                         // Restore original path if setup was cancelled
                         if (originalAtsPath == "N/A")
                         {

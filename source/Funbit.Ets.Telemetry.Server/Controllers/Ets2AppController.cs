@@ -1,184 +1,126 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Reflection;
+using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web.Http;
 using Funbit.Ets.Telemetry.Server.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Funbit.Ets.Telemetry.Server.Controllers
 {
     [RoutePrefix("")]
-    public class Ets2AppController : StaticFileController
+    public class Ets2AppController : ApiController
     {
-        static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public const string TelemetryAppUriPath = "/";
 
-        [HttpGet]
-        [Route("config.json", Name = "GetSkinConfig")]
-        public HttpResponseMessage GetSkinConfig()
-        {
-            var skinDirs = EnumerateDirectories("skins");
-            var skins = new JArray();
-            foreach (var skinDir in skinDirs)
-            {
-                var configJsonPath = Path.Combine(skinDir, "config.json");
-                if (File.Exists(configJsonPath))
-                {
-                    try
-                    {
-                        var skinConfigRoot = (JObject)JsonConvert.DeserializeObject(
-                            File.ReadAllText(configJsonPath, Encoding.UTF8));
-                        var skinConfig = skinConfigRoot["config"];
-                        skins.Add(skinConfig);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex);
-                    }
-                }
-            }
-            var config = new { skins };
-            return Request.CreateResponse(HttpStatusCode.OK, config, new JsonMediaTypeFormatter());
+        const string StatusPageHtml = @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <title>TruckSim GPS Telemetry Server</title>
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+        }
+        .status-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 28px;
+        }
+        .status-text {
+            color: #4CAF50;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .info {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .version {
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        .api-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""status-icon"">✅</div>
+        <h1>TruckSim GPS Telemetry Server</h1>
+        <div class=""status-text"">Connection Successful!</div>
+        <div class=""info"">
+            <p>The telemetry server is running and accessible from this device. 
+            You can now use this IP address in your TruckSim GPS mobile application to connect.</p>
+            
+            <p>To use this connection in the app:</p>
+            <ol style=""text-align: left; display: inline-block;"">
+                <li>Open the TruckSim GPS app on your mobile device</li>
+                <li>Go to connection settings</li>
+                <li>Enter this server's IP address</li>
+                <li>Start Euro Truck Simulator 2 or American Truck Simulator</li>
+            </ol>
+        </div>
+        
+        <div class=""api-info"">
+            Telemetry API: <strong>/api/ets2/telemetry</strong>
+        </div>
+        
+        <div class=""version"">Version {VERSION}</div>
+    </div>
+</body>
+</html>";
 
         [HttpGet]
         [Route("", Name = "GetRoot")]
-        public async Task<HttpResponseMessage> GetRoot()
+        public HttpResponseMessage GetRoot()
         {
-            var rootResponse = ServeStaticFile("", "index.html");
-            string rootContent = await rootResponse.Content.ReadAsStringAsync();
-            rootContent = rootContent.Replace("%SERVER_VERSION%", AssemblyHelper.Version);
-            rootResponse.Content = new StringContent(rootContent, Encoding.UTF8, "text/html");
-            return rootResponse;
+            var html = StatusPageHtml.Replace("{VERSION}", AssemblyHelper.Version);
+            var response = Request.CreateResponse(HttpStatusCode.OK);
+            response.Content = new StringContent(html, Encoding.UTF8, "text/html");
+            response.Headers.CacheControl = new CacheControlHeaderValue { NoCache = true };
+            return response;
         }
 
         [HttpGet]
-        [Route("{fileName:regex(^(?!.*api))}", Name = "GetRootFile")]
-        public HttpResponseMessage GetRootFile(
-            string fileName)
+        [Route("{*catchall}", Name = "CatchAll")]
+        public HttpResponseMessage CatchAll()
         {
-            return ServeStaticFile("", fileName);
-        }
-
-        // we support up to 5 directory levels with the root directory not containing "api" prefix
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{fileName}", Name = "GetResourceFile1")]
-        public HttpResponseMessage GetResourceFile1(
-            string dirName1, string fileName)
-        {
-            return ServeStaticFile(dirName1, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{fileName}", Name = "GetResourceFile2")]
-        public HttpResponseMessage GetResourceFile2(
-            string dirName1, string dirName2, string fileName)
-        {
-            return ServeStaticFile(dirName1 + 
-                "/" + dirName2, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{fileName}", Name = "GetResourceFile3")]
-        public HttpResponseMessage GetResourceFile3(
-            string dirName1, string dirName2, string dirName3, string fileName)
-        {
-            return ServeStaticFile(dirName1 + 
-                "/" + dirName2 + 
-                "/" + dirName3, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{dirName4}/{fileName}", Name = "GetResourceFile4")]
-        public HttpResponseMessage GetResourceFile4(
-            string dirName1, string dirName2, string dirName3, string dirName4, string fileName)
-        {
-            return ServeStaticFile(dirName1 + 
-                "/" + dirName2 + 
-                "/" + dirName3 + 
-                "/" + dirName4, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{dirName4}/{dirName5}/{fileName}", Name = "GetResourceFile5")]
-        public HttpResponseMessage GetResourceFile5(
-            string dirName1, string dirName2, string dirName3, string dirName4, 
-            string dirName5, string fileName)
-        {
-            return ServeStaticFile(dirName1 + 
-                "/" + dirName2 + 
-                "/" + dirName3 + 
-                "/" + dirName4 + 
-                "/" + dirName5, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{dirName4}/{dirName5}/{dirName6}/{fileName}", Name = "GetResourceFile6")]
-        public HttpResponseMessage GetResourceFile6(
-            string dirName1, string dirName2, string dirName3, string dirName4, 
-            string dirName5, string dirName6, string fileName)
-        {
-            return ServeStaticFile(dirName1 + 
-                "/" + dirName2 + 
-                "/" + dirName3 + 
-                "/" + dirName4 + 
-                "/" + dirName5 + 
-                "/" + dirName6, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{dirName4}/{dirName5}/{dirName6}/{dirName7}/{fileName}", Name = "GetResourceFile7")]
-        public HttpResponseMessage GetResourceFile7(
-            string dirName1, string dirName2, string dirName3, string dirName4, 
-            string dirName5, string dirName6, string dirName7, string fileName)
-        {
-            return ServeStaticFile(dirName1 + 
-                "/" + dirName2 + 
-                "/" + dirName3 + 
-                "/" + dirName4 + 
-                "/" + dirName5 + 
-                "/" + dirName6 + 
-                "/" + dirName7, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{dirName4}/{dirName5}/{dirName6}/{dirName7}/{dirName8}/{fileName}", Name = "GetResourceFile8")]
-        public HttpResponseMessage GetResourceFile8(
-            string dirName1, string dirName2, string dirName3, string dirName4,
-            string dirName5, string dirName6, string dirName7, string dirName8, string fileName)
-        {
-            return ServeStaticFile(dirName1 +
-                "/" + dirName2 +
-                "/" + dirName3 +
-                "/" + dirName4 +
-                "/" + dirName5 +
-                "/" + dirName6 +
-                "/" + dirName7 +
-                "/" + dirName8, fileName);
-        }
-
-        [HttpGet]
-        [Route("{dirName1:regex(^(?!.*api))}/{dirName2}/{dirName3}/{dirName4}/{dirName5}/{dirName6}/{dirName7}/{dirName8}/{dirName9}/{fileName}", Name = "GetResourceFile9")]
-        public HttpResponseMessage GetResourceFile9(
-            string dirName1, string dirName2, string dirName3, string dirName4,
-            string dirName5, string dirName6, string dirName7, string dirName8, string dirName9, string fileName)
-        {
-            return ServeStaticFile(dirName1 +
-                "/" + dirName2 +
-                "/" + dirName3 +
-                "/" + dirName4 +
-                "/" + dirName5 +
-                "/" + dirName6 +
-                "/" + dirName7 +
-                "/" + dirName8 +
-                "/" + dirName9, fileName);
+            return GetRoot();
         }
     }
 }
