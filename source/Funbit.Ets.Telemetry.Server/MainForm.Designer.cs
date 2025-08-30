@@ -41,21 +41,28 @@
             this.serverIpTitleLabel = new System.Windows.Forms.Label();
             this.appUrlLabel = new System.Windows.Forms.LinkLabel();
             this.appUrlTitleLabel = new System.Windows.Forms.Label();
-            this.apiUrlLabel = new System.Windows.Forms.LinkLabel();
             this.statusLabel = new System.Windows.Forms.Label();
-            this.apiEndpointUrlTitleLabel = new System.Windows.Forms.Label();
             this.statusTitleLabel = new System.Windows.Forms.Label();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.broadcastTimer = new System.Windows.Forms.Timer(this.components);
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.serverToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.rerunSetupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uninstallToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.donateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ets2PathTitleLabel = new System.Windows.Forms.Label();
+            this.ets2PathLabel = new System.Windows.Forms.Label();
+            this.ets2PluginStatusLabel = new System.Windows.Forms.Label();
+            this.atsPathTitleLabel = new System.Windows.Forms.Label();
+            this.atsPathLabel = new System.Windows.Forms.Label();
+            this.atsPluginStatusLabel = new System.Windows.Forms.Label();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.contextMenuStrip.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -93,16 +100,12 @@
             this.groupBox1.Controls.Add(this.interfacesDropDown);
             this.groupBox1.Controls.Add(this.networkInterfaceTitleLabel);
             this.groupBox1.Controls.Add(this.serverIpTitleLabel);
-            this.groupBox1.Controls.Add(this.appUrlLabel);
-            this.groupBox1.Controls.Add(this.appUrlTitleLabel);
-            this.groupBox1.Controls.Add(this.apiUrlLabel);
             this.groupBox1.Controls.Add(this.statusLabel);
-            this.groupBox1.Controls.Add(this.apiEndpointUrlTitleLabel);
             this.groupBox1.Controls.Add(this.statusTitleLabel);
             this.groupBox1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox1.Location = new System.Drawing.Point(12, 33);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(527, 233);
+            this.groupBox1.Size = new System.Drawing.Size(580, 160);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Server status";
@@ -110,8 +113,9 @@
             // ipAddressLabel
             // 
             this.ipAddressLabel.AutoSize = true;
-            this.ipAddressLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ipAddressLabel.ForeColor = System.Drawing.Color.Purple;
+            this.ipAddressLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ipAddressLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.ipAddressLabel.ForeColor = System.Drawing.Color.DarkBlue;
             this.ipAddressLabel.Location = new System.Drawing.Point(139, 131);
             this.ipAddressLabel.Name = "ipAddressLabel";
             this.ipAddressLabel.Size = new System.Drawing.Size(95, 17);
@@ -155,7 +159,7 @@
             // 
             this.appUrlLabel.AutoSize = true;
             this.appUrlLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.appUrlLabel.Location = new System.Drawing.Point(140, 163);
+            this.appUrlLabel.Location = new System.Drawing.Point(140, 125);
             this.appUrlLabel.Name = "appUrlLabel";
             this.appUrlLabel.Size = new System.Drawing.Size(72, 17);
             this.appUrlLabel.TabIndex = 16;
@@ -169,46 +173,93 @@
             // 
             this.appUrlTitleLabel.AutoSize = true;
             this.appUrlTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.appUrlTitleLabel.Location = new System.Drawing.Point(31, 163);
+            this.appUrlTitleLabel.Location = new System.Drawing.Point(18, 125);
             this.appUrlTitleLabel.Name = "appUrlTitleLabel";
             this.appUrlTitleLabel.Size = new System.Drawing.Size(107, 17);
             this.appUrlTitleLabel.TabIndex = 15;
-            this.appUrlTitleLabel.Text = "HTML5 App URL:";
+            this.appUrlTitleLabel.Text = "Browser Test URL:";
             // 
-            // apiUrlLabel
+            // ets2PathTitleLabel
             // 
-            this.apiUrlLabel.AutoSize = true;
-            this.apiUrlLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.apiUrlLabel.Location = new System.Drawing.Point(139, 194);
-            this.apiUrlLabel.Name = "apiUrlLabel";
-            this.apiUrlLabel.Size = new System.Drawing.Size(68, 17);
-            this.apiUrlLabel.TabIndex = 14;
-            this.apiUrlLabel.TabStop = true;
-            this.apiUrlLabel.Text = "apiUrlLabel";
-            this.toolTip.SetToolTip(this.apiUrlLabel, "Use this URL to develop your own applications based on the REST API (click to ope" +
-        "n)");
-            this.apiUrlLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.apiUrlLabel_LinkClicked);
+            this.ets2PathTitleLabel.AutoSize = true;
+            this.ets2PathTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2PathTitleLabel.Location = new System.Drawing.Point(18, 25);
+            this.ets2PathTitleLabel.Name = "ets2PathTitleLabel";
+            this.ets2PathTitleLabel.Size = new System.Drawing.Size(40, 17);
+            this.ets2PathTitleLabel.TabIndex = 22;
+            this.ets2PathTitleLabel.Text = "ETS2:";
+            // 
+            // ets2PathLabel
+            // 
+            this.ets2PathLabel.AutoSize = false;
+            this.ets2PathLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2PathLabel.ForeColor = System.Drawing.Color.Purple;
+            this.ets2PathLabel.Location = new System.Drawing.Point(80, 45);
+            this.ets2PathLabel.Name = "ets2PathLabel";
+            this.ets2PathLabel.Size = new System.Drawing.Size(450, 17);
+            this.ets2PathLabel.AutoSize = true;
+            this.ets2PathLabel.TabIndex = 23;
+            this.ets2PathLabel.Text = "Directory: Not configured";
+            this.toolTip.SetToolTip(this.ets2PathLabel, "ETS2 installation directory");
+            // 
+            // ets2PluginStatusLabel
+            // 
+            this.ets2PluginStatusLabel.AutoSize = true;
+            this.ets2PluginStatusLabel.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2PluginStatusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.ets2PluginStatusLabel.Location = new System.Drawing.Point(70, 25);
+            this.ets2PluginStatusLabel.Name = "ets2PluginStatusLabel";
+            this.ets2PluginStatusLabel.Size = new System.Drawing.Size(120, 13);
+            this.ets2PluginStatusLabel.TabIndex = 24;
+            this.ets2PluginStatusLabel.Text = "Plugin: Not configured";
+            this.toolTip.SetToolTip(this.ets2PluginStatusLabel, "ETS2 plugin installation status");
+            // 
+            // atsPathTitleLabel
+            // 
+            this.atsPathTitleLabel.AutoSize = true;
+            this.atsPathTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsPathTitleLabel.Location = new System.Drawing.Point(18, 75);
+            this.atsPathTitleLabel.Name = "atsPathTitleLabel";
+            this.atsPathTitleLabel.Size = new System.Drawing.Size(35, 17);
+            this.atsPathTitleLabel.TabIndex = 25;
+            this.atsPathTitleLabel.Text = "ATS:";
+            // 
+            // atsPathLabel
+            // 
+            this.atsPathLabel.AutoSize = false;
+            this.atsPathLabel.Font = new System.Drawing.Font("Segoe UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsPathLabel.ForeColor = System.Drawing.Color.Purple;
+            this.atsPathLabel.Location = new System.Drawing.Point(80, 95);
+            this.atsPathLabel.Name = "atsPathLabel";
+            this.atsPathLabel.Size = new System.Drawing.Size(450, 17);
+            this.atsPathLabel.AutoSize = true;
+            this.atsPathLabel.TabIndex = 26;
+            this.atsPathLabel.Text = "Directory: Not configured";
+            this.toolTip.SetToolTip(this.atsPathLabel, "ATS installation directory");
+            // 
+            // atsPluginStatusLabel
+            // 
+            this.atsPluginStatusLabel.AutoSize = true;
+            this.atsPluginStatusLabel.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsPluginStatusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.atsPluginStatusLabel.Location = new System.Drawing.Point(65, 75);
+            this.atsPluginStatusLabel.Name = "atsPluginStatusLabel";
+            this.atsPluginStatusLabel.Size = new System.Drawing.Size(120, 13);
+            this.atsPluginStatusLabel.TabIndex = 27;
+            this.atsPluginStatusLabel.Text = "Plugin: Not configured";
+            this.toolTip.SetToolTip(this.atsPluginStatusLabel, "ATS plugin installation status");
             // 
             // statusLabel
             // 
             this.statusLabel.AutoSize = true;
             this.statusLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.statusLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
             this.statusLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.statusLabel.Location = new System.Drawing.Point(141, 41);
             this.statusLabel.Name = "statusLabel";
             this.statusLabel.Size = new System.Drawing.Size(69, 17);
             this.statusLabel.TabIndex = 13;
             this.statusLabel.Text = "Checking...";
-            // 
-            // apiEndpointUrlTitleLabel
-            // 
-            this.apiEndpointUrlTitleLabel.AutoSize = true;
-            this.apiEndpointUrlTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.apiEndpointUrlTitleLabel.Location = new System.Drawing.Point(21, 194);
-            this.apiEndpointUrlTitleLabel.Name = "apiEndpointUrlTitleLabel";
-            this.apiEndpointUrlTitleLabel.Size = new System.Drawing.Size(116, 17);
-            this.apiEndpointUrlTitleLabel.TabIndex = 12;
-            this.apiEndpointUrlTitleLabel.Text = "Telemetry API URL:";
             // 
             // statusTitleLabel
             // 
@@ -247,10 +298,18 @@
             // serverToolStripMenu
             // 
             this.serverToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.rerunSetupToolStripMenuItem,
             this.uninstallToolStripMenuItem});
             this.serverToolStripMenu.Name = "serverToolStripMenu";
             this.serverToolStripMenu.Size = new System.Drawing.Size(51, 20);
             this.serverToolStripMenu.Text = "Server";
+            // 
+            // rerunSetupToolStripMenuItem
+            // 
+            this.rerunSetupToolStripMenuItem.Name = "rerunSetupToolStripMenuItem";
+            this.rerunSetupToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.rerunSetupToolStripMenuItem.Text = "Re-run Setup...";
+            this.rerunSetupToolStripMenuItem.Click += new System.EventHandler(this.rerunSetupToolStripMenuItem_Click);
             // 
             // uninstallToolStripMenuItem
             // 
@@ -291,12 +350,31 @@
             this.aboutToolStripMenuItem.Visible = false;
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.atsPluginStatusLabel);
+            this.groupBox2.Controls.Add(this.atsPathLabel);
+            this.groupBox2.Controls.Add(this.atsPathTitleLabel);
+            this.groupBox2.Controls.Add(this.ets2PluginStatusLabel);
+            this.groupBox2.Controls.Add(this.ets2PathLabel);
+            this.groupBox2.Controls.Add(this.ets2PathTitleLabel);
+            this.groupBox2.Controls.Add(this.appUrlLabel);
+            this.groupBox2.Controls.Add(this.appUrlTitleLabel);
+            this.groupBox2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox2.Location = new System.Drawing.Point(12, 210);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(580, 155);
+            this.groupBox2.TabIndex = 13;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Game Configuration";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(552, 281);
+            this.ClientSize = new System.Drawing.Size(605, 380);
             this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -311,6 +389,8 @@
             this.contextMenuStrip.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -328,9 +408,7 @@
         private System.Windows.Forms.Label serverIpTitleLabel;
         private System.Windows.Forms.LinkLabel appUrlLabel;
         private System.Windows.Forms.Label appUrlTitleLabel;
-        private System.Windows.Forms.LinkLabel apiUrlLabel;
         private System.Windows.Forms.Label statusLabel;
-        private System.Windows.Forms.Label apiEndpointUrlTitleLabel;
         private System.Windows.Forms.Label statusTitleLabel;
         private System.Windows.Forms.Label ipAddressLabel;
         private System.Windows.Forms.ComboBox interfacesDropDown;
@@ -340,10 +418,18 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem serverToolStripMenu;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenu;
+        private System.Windows.Forms.ToolStripMenuItem rerunSetupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uninstallToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem donateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.Label ets2PathTitleLabel;
+        private System.Windows.Forms.Label ets2PathLabel;
+        private System.Windows.Forms.Label ets2PluginStatusLabel;
+        private System.Windows.Forms.Label atsPathTitleLabel;
+        private System.Windows.Forms.Label atsPathLabel;
+        private System.Windows.Forms.Label atsPluginStatusLabel;
+        private System.Windows.Forms.GroupBox groupBox2;
     }
 }
 

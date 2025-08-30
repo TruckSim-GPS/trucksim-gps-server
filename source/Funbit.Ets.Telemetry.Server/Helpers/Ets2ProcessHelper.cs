@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 
 namespace Funbit.Ets.Telemetry.Server.Helpers
@@ -13,6 +14,11 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
         /// Returns last running game name: "ETS2", "ATS" or null if undefined.
         /// </summary>
         public static string LastRunningGameName { get; set; }
+        
+        /// <summary>
+        /// Returns the installation path of the last detected running game, or null if not available.
+        /// </summary>
+        public static string LastRunningGamePath { get; set; }
 
         /// <summary>
         /// Checks whether ETS2 game process is running right now. The maximum check frequency is restricted to 1 second.
@@ -38,6 +44,46 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
                             {
                                 _cachedRunningFlag = true;
                                 LastRunningGameName = process.ProcessName == "eurotrucks2" ? "ETS2" : "ATS";
+                                
+                                // Try to get the game installation path
+                                try
+                                {
+                                    string exePath = process.MainModule.FileName;
+                                    string exeDir = Path.GetDirectoryName(exePath);
+                                    
+                                    // The exe is typically in bin\win_x64 or bin\win_x86, so we need to go up to the game root
+                                    // Example: F:\SteamLibrary\steamapps\common\American Truck Simulator\bin\win_x64\amtrucks.exe
+                                    // We want: F:\SteamLibrary\steamapps\common\American Truck Simulator
+                                    
+                                    string gameRoot = null;
+                                    DirectoryInfo currentDir = new DirectoryInfo(exeDir);
+                                    
+                                    // Go up directories until we find one with base.scs and bin folder
+                                    while (currentDir != null && currentDir.Parent != null)
+                                    {
+                                        string testPath = currentDir.FullName;
+                                        string baseScsPath = Path.Combine(testPath, "base.scs");
+                                        string binPath = Path.Combine(testPath, "bin");
+                                        
+                                        if (File.Exists(baseScsPath) && Directory.Exists(binPath))
+                                        {
+                                            gameRoot = testPath;
+                                            break;
+                                        }
+                                        
+                                        currentDir = currentDir.Parent;
+                                    }
+                                    
+                                    LastRunningGamePath = gameRoot;
+                                    Console.WriteLine($"PROCESS DEBUG: Exe path: '{exePath}'");
+                                    Console.WriteLine($"PROCESS DEBUG: Game root: '{LastRunningGamePath}'");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"PROCESS DEBUG: Failed to get process path: {ex.Message}");
+                                    LastRunningGamePath = null;
+                                }
+                                
                                 return _cachedRunningFlag;
                             }
                         }
