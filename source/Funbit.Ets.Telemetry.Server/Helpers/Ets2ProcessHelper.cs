@@ -75,12 +75,16 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
                                     }
                                     
                                     LastRunningGamePath = gameRoot;
+#if DEBUG
                                     Console.WriteLine($"PROCESS DEBUG: Exe path: '{exePath}'");
                                     Console.WriteLine($"PROCESS DEBUG: Game root: '{LastRunningGamePath}'");
+#endif
                                 }
                                 catch (Exception ex)
                                 {
+#if DEBUG
                                     Console.WriteLine($"PROCESS DEBUG: Failed to get process path: {ex.Message}");
+#endif
                                     LastRunningGamePath = null;
                                 }
                                 

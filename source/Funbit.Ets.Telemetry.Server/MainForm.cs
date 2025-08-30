@@ -439,48 +439,64 @@ namespace Funbit.Ets.Telemetry.Server
         {
             try
             {
+#if DEBUG
                 Console.WriteLine($"AUTO-CORRECT DEBUG: UseTestTelemetryData={UseTestTelemetryData}, IsEts2Running={Ets2ProcessHelper.IsEts2Running}, IsConnected={ScsTelemetryDataReader.Instance.IsConnected}");
+#endif
                 
                 // Only try auto-correction if game is running (connected or not - we'll try both cases)
                 if (UseTestTelemetryData || !Ets2ProcessHelper.IsEts2Running)
                 {
+#if DEBUG
                     Console.WriteLine("AUTO-CORRECT: Skipped - test mode enabled or game not running");
+#endif
                     return;
                 }
                     
                 string runningGame = Ets2ProcessHelper.LastRunningGameName;
                 string detectedPath = Ets2ProcessHelper.LastRunningGamePath;
                 
+#if DEBUG
                 Console.WriteLine($"AUTO-CORRECT DEBUG: RunningGame='{runningGame}', DetectedPath='{detectedPath}'");
+#endif
                 
                 // Need both game name and detected path
                 if (string.IsNullOrEmpty(runningGame) || string.IsNullOrEmpty(detectedPath))
                 {
+#if DEBUG
                     Console.WriteLine("AUTO-CORRECT: Skipped - missing game name or detected path");
+#endif
                     return;
                 }
                     
                 // Get current stored path for the running game
                 string currentStoredPath = runningGame == "ETS2" ? Settings.Instance.Ets2GamePath : Settings.Instance.AtsGamePath;
                 
+#if DEBUG
                 Console.WriteLine($"AUTO-CORRECT DEBUG: CurrentStoredPath='{currentStoredPath}', IsInvalid={IsGamePathInvalid(currentStoredPath)}");
+#endif
                 
                 // Only auto-correct if current stored path is invalid and detected path is different
                 if (!IsGamePathInvalid(currentStoredPath) || string.Equals(currentStoredPath, detectedPath, StringComparison.OrdinalIgnoreCase))
                 {
+#if DEBUG
                     Console.WriteLine("AUTO-CORRECT: Skipped - current path is valid or same as detected");
+#endif
                     return;
                 }
                     
                 // Validate that detected path is actually a valid game installation
                 if (!IsValidGamePath(detectedPath))
                 {
+#if DEBUG
                     Console.WriteLine($"AUTO-CORRECT: Skipped - detected path '{detectedPath}' is not a valid game installation");
+#endif
                     return;
                 }
                     
                 // Update the stored path
+#if DEBUG
                 Console.WriteLine($"AUTO-CORRECT: Updating {runningGame} path from '{currentStoredPath}' to '{detectedPath}'");
+#endif
                 if (runningGame == "ETS2")
                 {
                     Settings.Instance.Ets2GamePath = detectedPath;
@@ -496,7 +512,9 @@ namespace Funbit.Ets.Telemetry.Server
                 
                 // Refresh the display multiple times to ensure it updates
                 UpdateGameInfo();
+#if DEBUG
                 Console.WriteLine($"AUTO-CORRECT: Path update completed, display refreshed");
+#endif
             }
             catch (Exception ex)
             {
@@ -573,8 +591,10 @@ namespace Funbit.Ets.Telemetry.Server
                 string x64Md5 = ComputeMd5(x64DllPath);
                 string x86Md5 = ComputeMd5(x86DllPath);
                 
+#if DEBUG
                 Console.WriteLine($"PLUGIN DEBUG: {gameName} x64 MD5: expected='{TelemetryX64DllMd5}', actual='{x64Md5}'");
                 Console.WriteLine($"PLUGIN DEBUG: {gameName} x86 MD5: expected='{TelemetryX86DllMd5}', actual='{x86Md5}'");
+#endif
                 
                 if (x64Md5 != TelemetryX64DllMd5 || x86Md5 != TelemetryX86DllMd5)
                 {
