@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -142,14 +143,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 if (GamePath == InstallationSkippedPath)
                     return true;
 
-                if (string.IsNullOrEmpty(GamePath))
-                    return false;
-
-                var baseScsPath = Path.Combine(GamePath, "base.scs");
-                var binPath = Path.Combine(GamePath, "bin");
-                bool validated = File.Exists(baseScsPath) && Directory.Exists(binPath);
-                Log.InfoFormat("Validating {2} path: '{0}' ... {1}", GamePath, validated ? "OK" : "Fail", _gameName);
-                return validated;
+                return IsValidGameInstallation(GamePath);
             }
 
             public bool IsPluginValid()
@@ -162,6 +156,31 @@ namespace Funbit.Ets.Telemetry.Server.Setup
 
                 return Md5(GetTelemetryPluginDllFileName(GamePath, x64: true)) == TelemetryX64DllMd5 &&
                     Md5(GetTelemetryPluginDllFileName(GamePath, x64: false)) == TelemetryX86DllMd5;
+            }
+            
+            bool IsValidGameInstallation(string gamePath)
+            {
+                if (string.IsNullOrEmpty(gamePath))
+                    return false;
+
+                // Check for base.scs file (game data archive)
+                var baseScsPath = Path.Combine(gamePath, "base.scs");
+                if (!File.Exists(baseScsPath))
+                    return false;
+
+                // Check for bin directory
+                var binPath = Path.Combine(gamePath, "bin");
+                if (!Directory.Exists(binPath))
+                    return false;
+
+                // Check for the actual game executable - this is the key validation that prevents orphan folder detection
+                string gameExeName = _gameName == "ETS2" ? "eurotrucks2.exe" : "amtrucks.exe";
+                var gameExePath = Path.Combine(gamePath, "bin", "win_x64", gameExeName);
+                
+                bool isValid = File.Exists(gameExePath);
+                Log.InfoFormat("Validating {2} installation: '{0}' ... {1}", gamePath, isValid ? "OK" : "Fail", _gameName);
+                
+                return isValid;
             }
 
             public void InstallPlugin()
@@ -195,6 +214,97 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                     File.Delete(x64BakFileName);
                 File.Move(x86DllFileName, x86BakFileName);
                 File.Move(x64DllFileName, x64BakFileName);
+            }
+
+            static List<string> GetSteamLibraryPaths()
+            {
+                var libraryPaths = new List<string>();
+                
+                try
+                {
+                    // Get Steam installation path from registry
+                    var steamPath = GetDefaultSteamPath();
+                    if (string.IsNullOrEmpty(steamPath))
+                        return libraryPaths;
+                    
+                    steamPath = steamPath.Replace('/', '\\');
+                    
+                    // Try both VDF file locations (new location first, then old)
+                    string[] vdfPaths = {
+                        Path.Combine(steamPath, "config", "libraryfolders.vdf"),
+                        Path.Combine(steamPath, "steamapps", "libraryfolders.vdf")
+                    };
+                    
+                    foreach (var vdfPath in vdfPaths)
+                    {
+                        if (File.Exists(vdfPath))
+                        {
+                            var parsedPaths = ParseLibraryFoldersVdf(vdfPath);
+                            libraryPaths.AddRange(parsedPaths);
+                            break; // Use first valid VDF file found
+                        }
+                    }
+                    
+                    // Add default Steam path as fallback (always include main Steam library)
+                    if (!string.IsNullOrEmpty(steamPath))
+                    {
+                        libraryPaths.Add(steamPath);
+                    }
+                    
+                    // Remove duplicates and return
+                    return libraryPaths.Distinct().ToList();
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't crash - fallback to default detection
+                    Log.WarnFormat("Failed to parse Steam library folders: {0}", ex.Message);
+                    
+                    // Return at least the default Steam path if available
+                    var defaultPath = GetDefaultSteamPath();
+                    if (!string.IsNullOrEmpty(defaultPath))
+                        libraryPaths.Add(defaultPath.Replace('/', '\\'));
+                    
+                    return libraryPaths;
+                }
+            }
+            
+            static List<string> ParseLibraryFoldersVdf(string vdfFilePath)
+            {
+                var paths = new List<string>();
+                
+                try
+                {
+                    var vdfContent = File.ReadAllText(vdfFilePath);
+                    
+                    // Simple regex to extract paths - matches: "path" "C:\\Program Files (x86)\\Steam"
+                    // This handles escaped backslashes and various whitespace patterns
+                    var pathRegex = new System.Text.RegularExpressions.Regex(
+                        @"""path""\s*""([^""]+)""", 
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    
+                    var matches = pathRegex.Matches(vdfContent);
+                    
+                    foreach (System.Text.RegularExpressions.Match match in matches)
+                    {
+                        if (match.Success && match.Groups.Count > 1)
+                        {
+                            var path = match.Groups[1].Value;
+                            // Unescape backslashes (VDF uses \\ for \)
+                            path = path.Replace(@"\\", @"\");
+                            
+                            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+                            {
+                                paths.Add(path);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.WarnFormat("Failed to parse VDF file '{0}': {1}", vdfFilePath, ex.Message);
+                }
+                
+                return paths;
             }
 
             static string GetDefaultSteamPath()
@@ -243,10 +353,22 @@ namespace Funbit.Ets.Telemetry.Server.Setup
 
             public void DetectPath()
             {
-                GamePath = GetDefaultSteamPath();
-                if (!string.IsNullOrEmpty(GamePath))
-                    GamePath = Path.Combine(
-                        GamePath.Replace('/', '\\'), @"SteamApps\common\" + GameDirectoryName);
+                // Try to find the game in all Steam library locations
+                var steamLibraryPaths = GetSteamLibraryPaths();
+                
+                foreach (var libraryPath in steamLibraryPaths)
+                {
+                    var potentialGamePath = Path.Combine(libraryPath, "steamapps", "common", GameDirectoryName);
+                    if (Directory.Exists(potentialGamePath))
+                    {
+                        // Check if this looks like a valid installation
+                        if (IsValidGameInstallation(potentialGamePath))
+                        {
+                            GamePath = potentialGamePath;
+                            return;
+                        }
+                    }
+                }
             }
 
             public void ConfigureGamePath(IWin32Window owner)
@@ -326,6 +448,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                     
                     if (!IsPathValid())
                     {
+                        string executableName = _gameName == "ETS2" ? "eurotrucks2.exe" : "amtrucks.exe";
                         MessageBox.Show(owner,
                             $">>> {gameFullName} <<<" + Environment.NewLine +
                             "The selected folder does not appear to be a valid installation." + Environment.NewLine + Environment.NewLine +

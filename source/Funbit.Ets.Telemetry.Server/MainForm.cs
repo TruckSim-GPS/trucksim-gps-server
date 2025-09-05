@@ -382,6 +382,9 @@ namespace Funbit.Ets.Telemetry.Server
             string pluginText = GetSimplePluginText(result, statusMessage);
             ets2PluginStatusLabel.Text = pluginText;
             ets2PluginStatusLabel.ForeColor = GetStatusColor(result, statusMessage);
+            
+            // Show "Copy missing plugins" button only for PluginMissing state
+            ets2CopyPluginButton.Visible = (result == PluginValidationResult.PluginMissing);
         }
         
         void UpdateAtsInfo()
@@ -395,6 +398,9 @@ namespace Funbit.Ets.Telemetry.Server
             string pluginText = GetSimplePluginText(result, statusMessage);
             atsPluginStatusLabel.Text = pluginText;
             atsPluginStatusLabel.ForeColor = GetStatusColor(result, statusMessage);
+            
+            // Show "Copy missing plugins" button only for PluginMissing state
+            atsCopyPluginButton.Visible = (result == PluginValidationResult.PluginMissing);
         }
         
         string GetSimplePluginText(PluginValidationResult result, string baseMessage)
@@ -405,7 +411,7 @@ namespace Funbit.Ets.Telemetry.Server
                     return "✓ Plugin OK";
                     
                 case PluginValidationResult.PluginMissing:
-                    return "⚠ Plugin missing (Server > Re-run Setup)";
+                    return "⚠ Plugin missing";
                     
                 case PluginValidationResult.InvalidPath:
                     if (baseMessage == "Installation skipped")
@@ -475,17 +481,17 @@ namespace Funbit.Ets.Telemetry.Server
                 Console.WriteLine($"AUTO-CORRECT DEBUG: CurrentStoredPath='{currentStoredPath}', IsInvalid={IsGamePathInvalid(currentStoredPath)}");
 #endif
                 
-                // Only auto-correct if current stored path is invalid and detected path is different
-                if (!IsGamePathInvalid(currentStoredPath) || string.Equals(currentStoredPath, detectedPath, StringComparison.OrdinalIgnoreCase))
+                // Skip if detected path is the same as current stored path
+                if (string.Equals(currentStoredPath, detectedPath, StringComparison.OrdinalIgnoreCase))
                 {
 #if DEBUG
-                    Console.WriteLine("AUTO-CORRECT: Skipped - current path is valid or same as detected");
+                    Console.WriteLine("AUTO-CORRECT: Skipped - detected path is same as stored path");
 #endif
                     return;
                 }
                     
-                // Validate that detected path is actually a valid game installation
-                if (!IsValidGamePath(detectedPath))
+                // Always prioritize the running executable path - validate that detected path is actually a valid game installation
+                if (!IsValidGamePath(detectedPath, runningGame))
                 {
 #if DEBUG
                     Console.WriteLine($"AUTO-CORRECT: Skipped - detected path '{detectedPath}' is not a valid game installation");
@@ -495,7 +501,7 @@ namespace Funbit.Ets.Telemetry.Server
                     
                 // Update the stored path
 #if DEBUG
-                Console.WriteLine($"AUTO-CORRECT: Updating {runningGame} path from '{currentStoredPath}' to '{detectedPath}'");
+                Console.WriteLine($"AUTO-CORRECT: Prioritizing running executable - updating {runningGame} path from '{currentStoredPath}' to '{detectedPath}'");
 #endif
                 if (runningGame == "ETS2")
                 {
@@ -528,16 +534,33 @@ namespace Funbit.Ets.Telemetry.Server
             return string.IsNullOrEmpty(gamePath) || gamePath == "N/A" || !IsValidGamePath(gamePath);
         }
         
-        bool IsValidGamePath(string gamePath)
+        bool IsValidGamePath(string gamePath, string gameName = null)
         {
             if (string.IsNullOrEmpty(gamePath))
                 return false;
                 
             try
             {
+                // Check for base.scs file (game data archive)
                 var baseScsPath = System.IO.Path.Combine(gamePath, "base.scs");
+                if (!System.IO.File.Exists(baseScsPath))
+                    return false;
+
+                // Check for bin directory
                 var binPath = System.IO.Path.Combine(gamePath, "bin");
-                return System.IO.File.Exists(baseScsPath) && System.IO.Directory.Exists(binPath);
+                if (!System.IO.Directory.Exists(binPath))
+                    return false;
+
+                // If game name is provided, check for the actual game executable (enhanced validation)
+                if (!string.IsNullOrEmpty(gameName))
+                {
+                    string gameExeName = gameName == "ETS2" ? "eurotrucks2.exe" : "amtrucks.exe";
+                    var gameExePath = System.IO.Path.Combine(gamePath, "bin", "win_x64", gameExeName);
+                    return System.IO.File.Exists(gameExePath);
+                }
+                
+                // Fallback to basic validation if no game name provided
+                return true;
             }
             catch
             {
@@ -570,12 +593,8 @@ namespace Funbit.Ets.Telemetry.Server
                     return PluginValidationResult.InvalidPath;
                 }
                 
-                // Use the same validation logic as PluginSetup
-                var baseScsPath = System.IO.Path.Combine(gamePath, "base.scs");
-                var binPath = System.IO.Path.Combine(gamePath, "bin");
-                bool pathValid = System.IO.File.Exists(baseScsPath) && System.IO.Directory.Exists(binPath);
-                
-                if (!pathValid)
+                // Use the same enhanced validation logic as PluginSetup
+                if (!IsValidGamePath(gamePath, gameName))
                 {
                     statusMessage = "Invalid directory";
                     return PluginValidationResult.InvalidPath;
@@ -631,6 +650,75 @@ namespace Funbit.Ets.Telemetry.Server
             catch
             {
                 return null;
+            }
+        }
+        
+        void ets2CopyPluginButton_Click(object sender, EventArgs e)
+        {
+            CopyPluginsForGame("ETS2");
+        }
+        
+        void atsCopyPluginButton_Click(object sender, EventArgs e)
+        {
+            CopyPluginsForGame("ATS");
+        }
+        
+        void CopyPluginsForGame(string gameName)
+        {
+            try
+            {
+                string gamePath = gameName == "ETS2" ? Settings.Instance.Ets2GamePath : Settings.Instance.AtsGamePath;
+                
+                if (string.IsNullOrEmpty(gamePath) || gamePath == "N/A")
+                {
+                    MessageBox.Show(this, $"Cannot copy plugins: {gameName} path is not configured.", 
+                        "Plugin Copy Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                
+                if (!IsValidGamePath(gamePath, gameName))
+                {
+                    MessageBox.Show(this, $"Cannot copy plugins: {gameName} path is invalid.", 
+                        "Plugin Copy Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                
+                // Define source plugin paths (from telemetry server installation)
+                const string TelemetryDllName = "trucksim-gps-telemetry.dll";
+                string sourceX86Path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x86\plugins", TelemetryDllName);
+                string sourceX64Path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x64\plugins", TelemetryDllName);
+                
+                // Define destination plugin paths
+                string destX86Path = System.IO.Path.Combine(gamePath, @"bin\win_x86\plugins", TelemetryDllName);
+                string destX64Path = System.IO.Path.Combine(gamePath, @"bin\win_x64\plugins", TelemetryDllName);
+                
+                // Ensure destination directories exist
+                string destX86Dir = System.IO.Path.GetDirectoryName(destX86Path);
+                string destX64Dir = System.IO.Path.GetDirectoryName(destX64Path);
+                if (!System.IO.Directory.Exists(destX86Dir))
+                    System.IO.Directory.CreateDirectory(destX86Dir);
+                if (!System.IO.Directory.Exists(destX64Dir))
+                    System.IO.Directory.CreateDirectory(destX64Dir);
+                
+                // Copy plugin files
+                Log.InfoFormat("Copying {1} x86 plugin DLL file to: {0}", destX86Path, gameName);
+                System.IO.File.Copy(sourceX86Path, destX86Path, true);
+                
+                Log.InfoFormat("Copying {1} x64 plugin DLL file to: {0}", destX64Path, gameName);
+                System.IO.File.Copy(sourceX64Path, destX64Path, true);
+                
+                // Show success message and refresh status
+                MessageBox.Show(this, $"✓ Successfully copied {gameName} plugins!\n\nPlugins installed to:\n• {destX86Path}\n• {destX64Path}", 
+                    "Plugins Copied Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // Refresh the plugin status display
+                UpdateGameInfo();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                MessageBox.Show(this, $"Failed to copy {gameName} plugins:\n\n{ex.Message}", 
+                    "Plugin Copy Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

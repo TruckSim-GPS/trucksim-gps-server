@@ -48,6 +48,8 @@
             this.ets2PluginStatusLabel = new System.Windows.Forms.Label();
             this.atsPathLabel = new System.Windows.Forms.Label();
             this.atsPluginStatusLabel = new System.Windows.Forms.Label();
+            this.ets2CopyPluginButton = new System.Windows.Forms.Button();
+            this.atsCopyPluginButton = new System.Windows.Forms.Button();
             this.broadcastTimer = new System.Windows.Forms.Timer(this.components);
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.serverToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -256,6 +258,30 @@
             this.atsPluginStatusLabel.Text = "Plugin: Not configured";
             this.toolTip.SetToolTip(this.atsPluginStatusLabel, "ATS plugin installation status");
             // 
+            // ets2CopyPluginButton
+            // 
+            this.ets2CopyPluginButton.Font = new System.Drawing.Font("Segoe UI", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ets2CopyPluginButton.Location = new System.Drawing.Point(350, 22);
+            this.ets2CopyPluginButton.Name = "ets2CopyPluginButton";
+            this.ets2CopyPluginButton.Size = new System.Drawing.Size(120, 23);
+            this.ets2CopyPluginButton.TabIndex = 28;
+            this.ets2CopyPluginButton.Text = "Copy missing plugins";
+            this.ets2CopyPluginButton.UseVisualStyleBackColor = true;
+            this.ets2CopyPluginButton.Visible = false;
+            this.ets2CopyPluginButton.Click += new System.EventHandler(this.ets2CopyPluginButton_Click);
+            // 
+            // atsCopyPluginButton
+            // 
+            this.atsCopyPluginButton.Font = new System.Drawing.Font("Segoe UI", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.atsCopyPluginButton.Location = new System.Drawing.Point(350, 72);
+            this.atsCopyPluginButton.Name = "atsCopyPluginButton";
+            this.atsCopyPluginButton.Size = new System.Drawing.Size(120, 23);
+            this.atsCopyPluginButton.TabIndex = 29;
+            this.atsCopyPluginButton.Text = "Copy missing plugins";
+            this.atsCopyPluginButton.UseVisualStyleBackColor = true;
+            this.atsCopyPluginButton.Visible = false;
+            this.atsCopyPluginButton.Click += new System.EventHandler(this.atsCopyPluginButton_Click);
+            // 
             // broadcastTimer
             // 
             this.broadcastTimer.Interval = 1000;
@@ -349,6 +375,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.atsCopyPluginButton);
+            this.groupBox2.Controls.Add(this.ets2CopyPluginButton);
             this.groupBox2.Controls.Add(this.atsPluginStatusLabel);
             this.groupBox2.Controls.Add(this.atsPathLabel);
             this.groupBox2.Controls.Add(this.atsPathTitleLabel);
@@ -426,6 +454,8 @@
         private System.Windows.Forms.Label atsPathTitleLabel;
         private System.Windows.Forms.Label atsPathLabel;
         private System.Windows.Forms.Label atsPluginStatusLabel;
+        private System.Windows.Forms.Button ets2CopyPluginButton;
+        private System.Windows.Forms.Button atsCopyPluginButton;
         private System.Windows.Forms.GroupBox groupBox2;
     }
 }
