@@ -115,12 +115,5 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
             response.Headers.CacheControl = new CacheControlHeaderValue { NoCache = true };
             return response;
         }
-
-        [HttpGet]
-        [Route("{*catchall}", Name = "CatchAll")]
-        public HttpResponseMessage CatchAll()
-        {
-            return GetRoot();
-        }
     }
 }
