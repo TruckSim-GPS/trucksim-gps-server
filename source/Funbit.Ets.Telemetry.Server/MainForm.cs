@@ -229,6 +229,15 @@ namespace Funbit.Ets.Telemetry.Server
         
         void uninstallToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // Make sure that game is not running during uninstall
+            if (Ets2ProcessHelper.IsEts2Running)
+            {
+                MessageBox.Show(this,
+                    @"In order to proceed the ETS2/ATS game must not be running." + Environment.NewLine +
+                    @"Please exit the game and try again.", @"Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             string exeFileName = Process.GetCurrentProcess().MainModule.FileName;
             var startInfo = new ProcessStartInfo
             {
@@ -363,9 +372,6 @@ namespace Funbit.Ets.Telemetry.Server
 
         void UpdateGameInfo()
         {
-            // Update menu item availability based on game state
-            rerunSetupToolStripMenuItem.Enabled = !Ets2ProcessHelper.IsEts2Running;
-            
             // Always show both ETS2 and ATS info
             UpdateEts2Info();
             UpdateAtsInfo();
