@@ -13,7 +13,10 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
     {
         public const string TelemetryAppUriPath = "/";
 
-        const string StatusPageHtml = @"<!DOCTYPE html>
+        // Template for the status page HTML
+        // {VERSION} will be replaced with actual version
+        // {BYPASS_NOTICE} will be replaced with bypass mode notice (or empty string)
+        public const string StatusPageHtmlTemplate = @"<!DOCTYPE html>
 <html>
 <head>
     <meta charset=""utf-8"">
@@ -76,6 +79,14 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
             font-size: 14px;
             color: #495057;
         }
+        .bypass-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -84,9 +95,9 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
         <h1>TruckSim GPS Telemetry Server</h1>
         <div class=""status-text"">Connection Successful!</div>
         <div class=""info"">
-            <p>The telemetry server is running and accessible from this device. 
+            <p>The telemetry server is running and accessible from this device.
             You can now use this IP address in your TruckSim GPS mobile application to connect.</p>
-            
+
             <p>To use this connection in the app:</p>
             <ol style=""text-align: left; display: inline-block;"">
                 <li>Open the TruckSim GPS app on your mobile device</li>
@@ -95,21 +106,39 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
                 <li>Start Euro Truck Simulator 2 or American Truck Simulator</li>
             </ol>
         </div>
-        
+
         <div class=""api-info"">
             Telemetry API: <strong>/api/ets2/telemetry</strong>
         </div>
-        
+
+        {BYPASS_NOTICE}
+
         <div class=""version"">Version {VERSION}</div>
     </div>
 </body>
 </html>";
 
+        /// <summary>
+        /// Generates the status page HTML with optional bypass mode notice
+        /// </summary>
+        /// <param name="showBypassNotice">If true, shows the custom HTTP server notice</param>
+        /// <returns>Complete HTML page</returns>
+        public static string GetStatusPageHtml(bool showBypassNotice = false)
+        {
+            string bypassNotice = showBypassNotice
+                ? @"<div class=""bypass-notice"">⚙️ Using custom HTTP server (KB5066835/KB5065789 workaround)</div>"
+                : "";
+
+            return StatusPageHtmlTemplate
+                .Replace("{VERSION}", AssemblyHelper.Version)
+                .Replace("{BYPASS_NOTICE}", bypassNotice);
+        }
+
         [HttpGet]
         [Route("", Name = "GetRoot")]
         public HttpResponseMessage GetRoot()
         {
-            var html = StatusPageHtml.Replace("{VERSION}", AssemblyHelper.Version);
+            var html = GetStatusPageHtml(showBypassNotice: false); // OWIN mode, no bypass
             var response = Request.CreateResponse(HttpStatusCode.OK);
             response.Content = new StringContent(html, Encoding.UTF8, "text/html");
             response.Headers.CacheControl = new CacheControlHeaderValue { NoCache = true };

@@ -12,13 +12,12 @@ using Funbit.Ets.Telemetry.Server.Controllers;
 using Funbit.Ets.Telemetry.Server.Data;
 using Funbit.Ets.Telemetry.Server.Helpers;
 using Funbit.Ets.Telemetry.Server.Setup;
-using Microsoft.Owin.Hosting;
 
 namespace Funbit.Ets.Telemetry.Server
 {
     public partial class MainForm : Form
     {
-        IDisposable _server;
+        MinimalHttpServer _server;
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         readonly HttpClient _broadcastHttpClient = new HttpClient();
@@ -76,21 +75,40 @@ namespace Funbit.Ets.Telemetry.Server
         {
             try
             {
+                Log.Info("=== Server Start Begin ===");
+                Log.InfoFormat("Current Date/Time: {0}", DateTime.Now);
+                Log.InfoFormat(".NET Framework Version: {0}", Environment.Version);
+                Log.InfoFormat("OS Version: {0}", Environment.OSVersion);
+
                 // load list of available network interfaces
                 var networkInterfaces = NetworkHelper.GetAllActiveNetworkInterfaces();
+                Log.InfoFormat("Found {0} active network interfaces", networkInterfaces.Count());
+
                 interfacesDropDown.Items.Clear();
                 foreach (var networkInterface in networkInterfaces)
+                {
+                    Log.InfoFormat("Network Interface: {0} - {1}", networkInterface.Name, networkInterface.Ip);
                     interfacesDropDown.Items.Add(networkInterface);
+                }
+
                 // select remembered interface or default
                 var rememberedInterface = networkInterfaces.FirstOrDefault(
                     i => i.Id == Settings.Instance.DefaultNetworkInterfaceId);
                 if (rememberedInterface != null)
+                {
+                    Log.InfoFormat("Using remembered interface: {0}", rememberedInterface.Name);
                     interfacesDropDown.SelectedItem = rememberedInterface;
+                }
                 else
+                {
+                    Log.Info("Using default interface (first available)");
                     interfacesDropDown.SelectedIndex = 0; // select default interface
+                }
 
-                // bind to all available interfaces
-                _server = WebApp.Start<Startup>(IpToEndpointUrl("+"));
+                // Start minimal HTTP server (bypasses HTTP.SYS to avoid KB5066835/KB5065789 bug)
+                var port = int.Parse(ConfigurationManager.AppSettings["Port"] ?? "31377");
+                _server = new MinimalHttpServer(port);
+                _server.Start();
 
                 // start ETS2 process watchdog timer
                 statusUpdateTimer.Enabled = true;
@@ -134,8 +152,18 @@ namespace Funbit.Ets.Telemetry.Server
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            _server?.Dispose();
-            trayIcon.Visible = false;
+            try
+            {
+                Log.Info("Application closing, stopping server...");
+                _server?.Stop();
+                _server?.Dispose();
+                trayIcon.Visible = false;
+                Log.Info("Server stopped successfully");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error during application shutdown", ex);
+            }
         }
     
         void closeToolStripMenuItem_Click(object sender, EventArgs e)
