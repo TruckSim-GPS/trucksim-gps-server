@@ -138,7 +138,7 @@ namespace Funbit.Ets.Telemetry.Server
         void MainForm_Load(object sender, EventArgs e)
         {
             // log current version for debugging
-            Log.InfoFormat("Running application on {0} ({1}) {2}", Environment.OSVersion, 
+            Log.InfoFormat("Running application on {0} ({1}) {2}", Environment.OSVersion,
                 Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit",
                 Program.UninstallMode ? "[UNINSTALL MODE]" : "");
             Text += @" " + AssemblyHelper.Version;

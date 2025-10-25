@@ -200,6 +200,7 @@
     <Compile Include="Setup\SetupManager.cs" />
     <Compile Include="Setup\SetupStatus.cs" />
     <Compile Include="Setup\UrlReservationSetup.cs" />
+    <Compile Include="Setup\VCRedistSetup.cs" />
     <Compile Include="MinimalHttpServer.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="MainForm.cs">

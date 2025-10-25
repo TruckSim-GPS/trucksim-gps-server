@@ -109,10 +109,12 @@ namespace Funbit.Ets.Telemetry.Server
                 }
             }
             
-            // update UI 
+            // update UI
             foreach (var step in SetupManager.Steps)
             {
-                if (step is PluginSetup)
+                if (step is VCRedistSetup)
+                    _setupStatusImages.Add(step, vcredistStatusImage);
+                else if (step is PluginSetup)
                     _setupStatusImages.Add(step, pluginStatusImage);
                 else if (step is FirewallSetup)
                     _setupStatusImages.Add(step, firewallStatusImage);
@@ -174,7 +176,7 @@ namespace Funbit.Ets.Telemetry.Server
 
         private void helpLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ProcessHelper.OpenUrl("https://github.com/Funbit/ets2-telemetry-server");
+            ProcessHelper.OpenUrl("https://github.com/trucksim-gps/trucksim-gps-server/");
         }
     }
 }

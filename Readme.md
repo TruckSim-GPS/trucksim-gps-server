@@ -4,6 +4,11 @@ A telemetry server for **Euro Truck Simulator 2** and **American Truck Simulator
 
 This server runs in the background while you play ETS2 or ATS, allowing your mobile device to receive live truck data for GPS navigation features.
 
+## System Requirements
+
+- **Windows 10/11** (64-bit)
+- **Microsoft Visual C++ 2015-2022 Redistributable (x64)** - [Download from Microsoft](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
 ## Compatibility
 
 **Server Version:** 1.0.2

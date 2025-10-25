@@ -8,8 +8,9 @@
         {
             Steps = new ISetup[]
             {
-                new PluginSetup(), 
-                new FirewallSetup(), 
+                new VCRedistSetup(),
+                new PluginSetup(),
+                new FirewallSetup(),
                 new UrlReservationSetup()
             };
         }
