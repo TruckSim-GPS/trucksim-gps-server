@@ -482,7 +482,7 @@ namespace Funbit.Ets.Telemetry.Server
 #if DEBUG
                 Console.WriteLine($"AUTO-CORRECT DEBUG: UseTestTelemetryData={UseTestTelemetryData}, IsEts2Running={Ets2ProcessHelper.IsEts2Running}, IsConnected={ScsTelemetryDataReader.Instance.IsConnected}");
 #endif
-                
+
                 // Only try auto-correction if game is running (connected or not - we'll try both cases)
                 if (UseTestTelemetryData || !Ets2ProcessHelper.IsEts2Running)
                 {
@@ -491,14 +491,14 @@ namespace Funbit.Ets.Telemetry.Server
 #endif
                     return;
                 }
-                    
+
                 string runningGame = Ets2ProcessHelper.LastRunningGameName;
                 string detectedPath = Ets2ProcessHelper.LastRunningGamePath;
-                
+
 #if DEBUG
                 Console.WriteLine($"AUTO-CORRECT DEBUG: RunningGame='{runningGame}', DetectedPath='{detectedPath}'");
 #endif
-                
+
                 // Need both game name and detected path
                 if (string.IsNullOrEmpty(runningGame) || string.IsNullOrEmpty(detectedPath))
                 {
@@ -507,14 +507,14 @@ namespace Funbit.Ets.Telemetry.Server
 #endif
                     return;
                 }
-                    
+
                 // Get current stored path for the running game
                 string currentStoredPath = runningGame == "ETS2" ? Settings.Instance.Ets2GamePath : Settings.Instance.AtsGamePath;
-                
+
 #if DEBUG
                 Console.WriteLine($"AUTO-CORRECT DEBUG: CurrentStoredPath='{currentStoredPath}', IsInvalid={IsGamePathInvalid(currentStoredPath)}");
 #endif
-                
+
                 // Skip if detected path is the same as current stored path
                 if (string.Equals(currentStoredPath, detectedPath, StringComparison.OrdinalIgnoreCase))
                 {
@@ -523,7 +523,7 @@ namespace Funbit.Ets.Telemetry.Server
 #endif
                     return;
                 }
-                    
+
                 // Always prioritize the running executable path - validate that detected path is actually a valid game installation
                 if (!IsValidGamePath(detectedPath, runningGame))
                 {
@@ -532,7 +532,7 @@ namespace Funbit.Ets.Telemetry.Server
 #endif
                     return;
                 }
-                    
+
                 // Update the stored path
 #if DEBUG
                 Console.WriteLine($"AUTO-CORRECT: Prioritizing running executable - updating {runningGame} path from '{currentStoredPath}' to '{detectedPath}'");
@@ -546,10 +546,10 @@ namespace Funbit.Ets.Telemetry.Server
                     Settings.Instance.AtsGamePath = detectedPath;
                 }
                 Settings.Instance.Save();
-                
+
                 // Force refresh after a short delay to ensure settings are saved
                 System.Threading.Thread.Sleep(100);
-                
+
                 // Refresh the display multiple times to ensure it updates
                 UpdateGameInfo();
 #if DEBUG
