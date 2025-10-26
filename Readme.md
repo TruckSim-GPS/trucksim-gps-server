@@ -1,4 +1,4 @@
-# TruckSim GPS Telemetry Server v1.0.2
+# TruckSim GPS Telemetry Server v1.0.3
 
 A telemetry server for **Euro Truck Simulator 2** and **American Truck Simulator** that enables real-time communication between your PC and the TruckSim GPS mobile app.
 
@@ -11,7 +11,7 @@ This server runs in the background while you play ETS2 or ATS, allowing your mob
 
 ## Compatibility
 
-**Server Version:** 1.0.2
+**Server Version:** 1.0.3
 **Compatible with:** TruckSim GPS alpha-4 patch-1 mobile app (v0.4.1)
 
 ## How to Use
