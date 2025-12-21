@@ -123,7 +123,7 @@
             this.ipAddressLabel.Size = new System.Drawing.Size(101, 17);
             this.ipAddressLabel.TabIndex = 21;
             this.ipAddressLabel.Text = "111.222.333.444";
-            this.toolTip.SetToolTip(this.ipAddressLabel, "Use this IP address for mobile application (Android)");
+            this.toolTip.SetToolTip(this.ipAddressLabel, "Use this IP address for mobile application");
             // 
             // interfacesDropDown
             // 
