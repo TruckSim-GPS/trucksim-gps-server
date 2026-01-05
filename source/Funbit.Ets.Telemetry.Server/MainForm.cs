@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -17,6 +18,17 @@ namespace Funbit.Ets.Telemetry.Server
 {
     public partial class MainForm : Form
     {
+        [DllImport("user32.dll")]
+        static extern int RegisterWindowMessage(string message);
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        const int SW_SHOWNORMAL = 1;
+
+        int _showExistingInstanceMessage;
+
         MinimalHttpServer _server;
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -35,6 +47,21 @@ namespace Funbit.Ets.Telemetry.Server
         public MainForm()
         {
             InitializeComponent();
+            _showExistingInstanceMessage = RegisterWindowMessage(Program.ShowExistingInstanceMessage);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == _showExistingInstanceMessage)
+            {
+                // Another instance tried to start - bring this window to the foreground
+                ShowWindow(Handle, SW_SHOWNORMAL);
+                ShowInTaskbar = true;
+                WindowState = FormWindowState.Normal;
+                Activate();
+                SetForegroundWindow(Handle);
+            }
+            base.WndProc(ref m);
         }
 
         static string IpToEndpointUrl(string host)
