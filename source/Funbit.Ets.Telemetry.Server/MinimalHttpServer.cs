@@ -26,6 +26,11 @@ namespace Funbit.Ets.Telemetry.Server
         private bool _isRunning;
         private readonly object _lock = new object();
 
+        // Keep-alive: reuse TCP connections to avoid TIME_WAIT socket accumulation.
+        // At 10 polls/sec with Connection: close, each poll opens a new TCP connection
+        // that lingers in TIME_WAIT for 240s, eventually exhausting ephemeral ports.
+        const int KeepAliveTimeoutMs = 30000;
+
         public MinimalHttpServer(int port)
         {
             _port = port;
@@ -108,12 +113,12 @@ namespace Funbit.Ets.Telemetry.Server
                 {
                     var client = await _listener.AcceptTcpClientAsync();
 
-                    // Handle each client in a separate task
+                    // Handle each client in a separate task (long-lived with keep-alive)
                     _ = Task.Run(async () =>
                     {
                         try
                         {
-                            await HandleClientAsync(client);
+                            await HandleClientAsync(client, cancellationToken);
                         }
                         catch (Exception ex)
                         {
@@ -136,31 +141,35 @@ namespace Funbit.Ets.Telemetry.Server
             }
         }
 
-        private async Task HandleClientAsync(TcpClient client)
+        private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
         {
             using (client)
             {
-                client.ReceiveTimeout = 5000; // 5 second timeout
                 client.SendTimeout = 5000;
 
                 try
                 {
                     using (var stream = client.GetStream())
                     {
-                        // Read HTTP request
-                        var request = await ReadHttpRequestAsync(stream);
-
-                        if (request == null)
+                        // Keep-alive loop: handle multiple requests on the same TCP connection
+                        while (!cancellationToken.IsCancellationRequested)
                         {
-                            Log.Warn("Received empty or malformed request");
-                            return;
+                            var request = await ReadHttpRequestAsync(stream, KeepAliveTimeoutMs);
+
+                            if (request == null)
+                                break; // Client closed connection, idle timeout, or malformed request
+
+                            bool clientWantsClose = request.Headers != null &&
+                                request.Headers.Any(h =>
+                                    h.StartsWith("Connection:", StringComparison.OrdinalIgnoreCase) &&
+                                    h.IndexOf("close", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                            var response = RouteRequest(request);
+                            await SendHttpResponseAsync(stream, response, closeConnection: clientWantsClose);
+
+                            if (clientWantsClose)
+                                break;
                         }
-
-                        // Route the request
-                        var response = RouteRequest(request);
-
-                        // Send HTTP response
-                        await SendHttpResponseAsync(stream, response);
                     }
                 }
                 catch (IOException ex)
@@ -169,15 +178,26 @@ namespace Funbit.Ets.Telemetry.Server
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("Error processing client request", ex);
+                    if (!cancellationToken.IsCancellationRequested)
+                        Log.Error("Error processing client request", ex);
                 }
             }
         }
 
-        private async Task<HttpRequest> ReadHttpRequestAsync(NetworkStream stream)
+        private async Task<HttpRequest> ReadHttpRequestAsync(NetworkStream stream, int timeoutMs)
         {
             var buffer = new byte[8192];
-            var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+
+            // Idle timeout: if no request arrives within timeoutMs, return null to close
+            // the keep-alive connection. NetworkStream.ReadAsync doesn't respect
+            // Socket.ReceiveTimeout, so we use Task.WhenAny with Task.Delay instead.
+            var readTask = stream.ReadAsync(buffer, 0, buffer.Length);
+            var completed = await Task.WhenAny(readTask, Task.Delay(timeoutMs));
+
+            if (completed != readTask)
+                return null; // Idle timeout — close connection
+
+            var bytesRead = await readTask;
 
             if (bytesRead == 0)
                 return null;
@@ -300,7 +320,7 @@ namespace Funbit.Ets.Telemetry.Server
             }
         }
 
-        private async Task SendHttpResponseAsync(NetworkStream stream, HttpResponse response)
+        private async Task SendHttpResponseAsync(NetworkStream stream, HttpResponse response, bool closeConnection = false)
         {
             var bodyBytes = Encoding.UTF8.GetBytes(response.Body ?? "");
 
@@ -308,7 +328,16 @@ namespace Funbit.Ets.Telemetry.Server
             responseBuilder.AppendFormat("HTTP/1.1 {0} {1}\r\n", response.StatusCode, response.StatusText);
             responseBuilder.AppendFormat("Content-Type: {0}\r\n", response.ContentType);
             responseBuilder.AppendFormat("Content-Length: {0}\r\n", bodyBytes.Length);
-            responseBuilder.Append("Connection: close\r\n");
+
+            if (closeConnection)
+            {
+                responseBuilder.Append("Connection: close\r\n");
+            }
+            else
+            {
+                responseBuilder.Append("Connection: keep-alive\r\n");
+                responseBuilder.AppendFormat("Keep-Alive: timeout={0}\r\n", KeepAliveTimeoutMs / 1000);
+            }
 
             if (!string.IsNullOrEmpty(response.CacheControl))
             {
