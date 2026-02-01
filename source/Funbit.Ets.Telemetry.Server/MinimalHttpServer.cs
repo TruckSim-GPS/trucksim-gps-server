@@ -143,9 +143,13 @@ namespace Funbit.Ets.Telemetry.Server
 
         private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
         {
+            var clientEndpoint = client.Client.RemoteEndPoint?.ToString() ?? "unknown";
+            var requestCount = 0;
+
             using (client)
             {
                 client.SendTimeout = 5000;
+                Log.InfoFormat("[KeepAlive] Connection opened from {0}", clientEndpoint);
 
                 try
                 {
@@ -157,7 +161,12 @@ namespace Funbit.Ets.Telemetry.Server
                             var request = await ReadHttpRequestAsync(stream, KeepAliveTimeoutMs);
 
                             if (request == null)
-                                break; // Client closed connection, idle timeout, or malformed request
+                            {
+                                Log.InfoFormat("[KeepAlive] Connection closed from {0} after {1} requests (client closed or idle timeout)", clientEndpoint, requestCount);
+                                break;
+                            }
+
+                            requestCount++;
 
                             bool clientWantsClose = request.Headers != null &&
                                 request.Headers.Any(h =>
@@ -168,18 +177,21 @@ namespace Funbit.Ets.Telemetry.Server
                             await SendHttpResponseAsync(stream, response, closeConnection: clientWantsClose);
 
                             if (clientWantsClose)
+                            {
+                                Log.InfoFormat("[KeepAlive] Connection closed from {0} after {1} requests (client requested close)", clientEndpoint, requestCount);
                                 break;
+                            }
                         }
                     }
                 }
                 catch (IOException ex)
                 {
-                    Log.Debug($"IO exception (client likely disconnected): {ex.Message}");
+                    Log.InfoFormat("[KeepAlive] IO exception from {0} after {1} requests: {2}", clientEndpoint, requestCount, ex.Message);
                 }
                 catch (Exception ex)
                 {
                     if (!cancellationToken.IsCancellationRequested)
-                        Log.Error("Error processing client request", ex);
+                        Log.ErrorFormat("[KeepAlive] Error from {0} after {1} requests: {2}", clientEndpoint, requestCount, ex.Message);
                 }
             }
         }
