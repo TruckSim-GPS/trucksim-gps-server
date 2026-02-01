@@ -8,7 +8,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
 {
     public class ScsTelemetryDataReader : IDisposable
     {
-        const string ScsTelemetryMapName = "Local\\SCSTelemetry";
+        const string ScsTelemetryMapName = "Local\\TSGPSTelemetry";
 
         readonly SharedMemory _sharedMemory = new SharedMemory();
         readonly object _lock = new object();

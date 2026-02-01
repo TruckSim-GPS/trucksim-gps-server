@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
 using Funbit.Ets.Telemetry.Server.Controllers;
@@ -661,22 +660,18 @@ namespace Funbit.Ets.Telemetry.Server
                     return PluginValidationResult.InvalidPath;
                 }
                 
-                // Use the same MD5 validation as PluginSetup.GameState.IsPluginValid()
-                const string TelemetryX64DllMd5 = "90bfd9519f9251afdf4ff131839efbd9";
-                const string TelemetryX86DllMd5 = "1f94471a3698a372064f73e6168d6711";
-                
                 string x64DllPath = System.IO.Path.Combine(gamePath, @"bin\win_x64\plugins\trucksim-gps-telemetry.dll");
                 string x86DllPath = System.IO.Path.Combine(gamePath, @"bin\win_x86\plugins\trucksim-gps-telemetry.dll");
-                
-                string x64Md5 = ComputeMd5(x64DllPath);
-                string x86Md5 = ComputeMd5(x86DllPath);
-                
+
+                string x64Md5 = PluginSetup.ComputeMd5(x64DllPath);
+                string x86Md5 = PluginSetup.ComputeMd5(x86DllPath);
+
 #if DEBUG
-                Console.WriteLine($"PLUGIN DEBUG: {gameName} x64 MD5: expected='{TelemetryX64DllMd5}', actual='{x64Md5}'");
-                Console.WriteLine($"PLUGIN DEBUG: {gameName} x86 MD5: expected='{TelemetryX86DllMd5}', actual='{x86Md5}'");
+                Console.WriteLine($"PLUGIN DEBUG: {gameName} x64 MD5: expected='{PluginSetup.TelemetryX64DllMd5}', actual='{x64Md5}'");
+                Console.WriteLine($"PLUGIN DEBUG: {gameName} x86 MD5: expected='{PluginSetup.TelemetryX86DllMd5}', actual='{x86Md5}'");
 #endif
-                
-                if (x64Md5 != TelemetryX64DllMd5 || x86Md5 != TelemetryX86DllMd5)
+
+                if (x64Md5 != PluginSetup.TelemetryX64DllMd5 || x86Md5 != PluginSetup.TelemetryX86DllMd5)
                 {
                     statusMessage = "Plugin missing or outdated";
                     return PluginValidationResult.PluginMissing;
@@ -690,27 +685,6 @@ namespace Funbit.Ets.Telemetry.Server
                 Log.Error(ex);
                 statusMessage = "Validation error";
                 return PluginValidationResult.InvalidPath;
-            }
-        }
-        
-        string ComputeMd5(string fileName)
-        {
-            if (!System.IO.File.Exists(fileName))
-                return null;
-                
-            try
-            {
-                using (var provider = new MD5CryptoServiceProvider())
-                {
-                    var bytes = System.IO.File.ReadAllBytes(fileName);
-                    var hash = provider.ComputeHash(bytes);
-                    var result = string.Concat(hash.Select(b => $"{b:x02}"));
-                    return result;
-                }
-            }
-            catch
-            {
-                return null;
             }
         }
         

@@ -14,6 +14,21 @@ namespace Funbit.Ets.Telemetry.Server.Setup
     {
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        internal const string TelemetryX64DllMd5 = "9f58d5699e3e6b268d9a731996f07312";
+        internal const string TelemetryX86DllMd5 = "f640a4aa4a484aa29264d716c44ee589";
+
+        internal static string ComputeMd5(string fileName)
+        {
+            if (!File.Exists(fileName))
+                return null;
+            using (var provider = new MD5CryptoServiceProvider())
+            {
+                var bytes = File.ReadAllBytes(fileName);
+                var hash = provider.ComputeHash(bytes);
+                return string.Concat(hash.Select(b => $"{b:x02}"));
+            }
+        }
+
         const string Ets2 = "ETS2";
         const string Ats = "ATS";
         SetupStatus _status;
@@ -114,8 +129,6 @@ namespace Funbit.Ets.Telemetry.Server.Setup
         {
             const string InstallationSkippedPath = "N/A";
             const string TelemetryDllName = "trucksim-gps-telemetry.dll";
-            const string TelemetryX64DllMd5 = "90bfd9519f9251afdf4ff131839efbd9";
-            const string TelemetryX86DllMd5 = "1f94471a3698a372064f73e6168d6711";
 
             readonly string _gameName;
 
@@ -338,18 +351,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 return Path.Combine(path, TelemetryDllName);
             }
             
-            static string Md5(string fileName)
-            {
-                if (!File.Exists(fileName))
-                    return null;
-                using (var provider = new MD5CryptoServiceProvider())
-                {
-                    var bytes = File.ReadAllBytes(fileName);
-                    var hash = provider.ComputeHash(bytes);
-                    var result = string.Concat(hash.Select(b => $"{b:x02}"));
-                    return result;
-                }
-            }
+            static string Md5(string fileName) => ComputeMd5(fileName);
 
             public void DetectPath()
             {
