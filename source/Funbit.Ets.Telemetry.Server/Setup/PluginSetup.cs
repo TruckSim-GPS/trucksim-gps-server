@@ -14,8 +14,8 @@ namespace Funbit.Ets.Telemetry.Server.Setup
     {
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        internal const string TelemetryX64DllMd5 = "d6cc6589938d6258ea5546ba8e371dcd";
-        internal const string TelemetryX86DllMd5 = "6120fbabc2bfe460eb7b91eb059d5aaf";
+        internal const string TelemetryX64DllMd5 = "ad8a04a88e9b35f153facdffef4ecf94";
+        internal const string TelemetryX86DllMd5 = "7b37089f5c3d503e73368dfde3f841f1";
 
         internal static string ComputeMd5(string fileName)
         {

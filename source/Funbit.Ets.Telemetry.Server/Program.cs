@@ -41,6 +41,7 @@ namespace Funbit.Ets.Telemetry.Server
 
         public static bool UninstallMode;
         public static bool ForceSetupMode;
+        public static bool StartMinimized;
 
         /// <summary>
         /// The main entry point for the application.
@@ -69,6 +70,7 @@ namespace Funbit.Ets.Telemetry.Server
             Application.SetCompatibleTextRenderingDefault(false);
             UninstallMode = args.Length >= 1 && args.Any(a => a.Trim() == "-uninstall");
             ForceSetupMode = args.Length >= 1 && args.Any(a => a.Trim() == "-rerunsetup");
+            StartMinimized = args.Length >= 1 && args.Any(a => a.Trim() == "-minimized");
 
             Application.Run(new MainForm());
         }

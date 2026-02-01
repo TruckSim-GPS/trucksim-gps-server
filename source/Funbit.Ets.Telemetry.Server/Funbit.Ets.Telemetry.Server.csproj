@@ -23,7 +23,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.3.%2a</ApplicationVersion>
+    <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -58,6 +58,9 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <Reference Include="AutoUpdater.NET">
+      <HintPath>..\packages\Autoupdater.NET.Official.1.9.2\lib\net462\AutoUpdater.NET.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
     </Reference>
@@ -137,39 +140,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <!-- Link SCSSdkClient (C#) from the plugin repo for shared memory parsing -->
+  <!-- SCSSdkClient (C#) - shared memory parsing (moved from plugin repo) -->
   <ItemGroup>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SharedMemory.cs">
-      <Link>SCSSdkClient\SharedMemory.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SCSSdkConvert.cs">
-      <Link>SCSSdkClient\SCSSdkConvert.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SCSSdkTelemetry.cs">
-      <Link>SCSSdkClient\SCSSdkTelemetry.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\SCSGame.cs">
-      <Link>SCSSdkClient\SCSGame.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\ShifterType.cs">
-      <Link>SCSSdkClient\ShifterType.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\AuxLevel.cs">
-      <Link>SCSSdkClient\AuxLevel.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\JobMarket.cs">
-      <Link>SCSSdkClient\JobMarket.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\Extension.cs">
-      <Link>SCSSdkClient\Extension.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\Offence.cs">
-      <Link>SCSSdkClient\Offence.cs</Link>
-    </Compile>
+    <Compile Include="SCSSdkClient\SharedMemory.cs" />
+    <Compile Include="SCSSdkClient\SCSSdkConvert.cs" />
+    <Compile Include="SCSSdkClient\SCSSdkTelemetry.cs" />
+    <Compile Include="SCSSdkClient\SCSGame.cs" />
+    <Compile Include="SCSSdkClient\ShifterType.cs" />
+    <Compile Include="SCSSdkClient\AuxLevel.cs" />
+    <Compile Include="SCSSdkClient\JobMarket.cs" />
+    <Compile Include="SCSSdkClient\Extension.cs" />
+    <Compile Include="SCSSdkClient\Offence.cs" />
     <!-- Object model files -->
-    <Compile Include="..\..\..\trucksim-gps-plugin\scs-client\C#\SCSSdkClient\Object\*.cs">
-      <Link>SCSSdkClient\Object\%(FileName)%(Extension)</Link>
-    </Compile>
+    <Compile Include="SCSSdkClient\Object\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\Ets2AppController.cs" />
@@ -284,7 +267,7 @@
     
     <!-- Move dependency DLLs to dependencies subdirectory -->
     <ItemGroup>
-      <DependencyDlls Include="$(OutputPath)Microsoft.*.dll;$(OutputPath)System.*.dll;$(OutputPath)Owin*.dll;$(OutputPath)Newtonsoft.*.dll;$(OutputPath)log4net.dll" />
+      <DependencyDlls Include="$(OutputPath)Microsoft.*.dll;$(OutputPath)System.*.dll;$(OutputPath)Owin*.dll;$(OutputPath)Newtonsoft.*.dll;$(OutputPath)log4net.dll;$(OutputPath)AutoUpdater.NET.dll" />
     </ItemGroup>
     <Move SourceFiles="@(DependencyDlls)" DestinationFolder="$(OutputPath)dependencies" />
     

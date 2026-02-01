@@ -49,7 +49,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
                 return new TelemetryV1
                 {
-                    ServerVersion = 1,
+                    ServerVersion = 2,
                     Game = game,
                     Truck = truck,
                     Trailers = trailers,

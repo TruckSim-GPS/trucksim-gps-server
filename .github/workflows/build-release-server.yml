@@ -1,0 +1,53 @@
+name: Build & Release Server Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-and-attach:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore source/Funbit.Ets.Telemetry.sln
+
+      - name: Build Release
+        run: msbuild source/Funbit.Ets.Telemetry.sln /p:Configuration=Release
+
+      - name: Download VC++ Redistributable
+        run: Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile installer/vc_redist.x64.exe
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Extract version from AssemblyInfo
+        id: version
+        run: |
+          $content = Get-Content "source/Funbit.Ets.Telemetry.Server/Properties/AssemblyInfo.cs" -Raw
+          $match = [regex]::Match($content, 'AssemblyVersion\("(\d+\.\d+\.\d+)')
+          echo "VERSION=$($match.Groups[1].Value)" >> $env:GITHUB_OUTPUT
+
+      - name: Compile installer
+        run: iscc /DAppVersion=${{ steps.version.outputs.VERSION }} installer/TruckSimGPS_Server.iss
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TruckSimGPS_Server_Setup
+          path: installer/Output/TruckSimGPS_Server_Setup_*.exe
+
+      - name: Attach installer to release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: installer/Output/TruckSimGPS_Server_Setup_*.exe

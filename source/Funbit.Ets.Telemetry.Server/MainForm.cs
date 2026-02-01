@@ -11,6 +11,10 @@ using System.Windows.Forms;
 using Funbit.Ets.Telemetry.Server.Controllers;
 using Funbit.Ets.Telemetry.Server.Data;
 using Funbit.Ets.Telemetry.Server.Helpers;
+using AutoUpdaterDotNET;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Funbit.Ets.Telemetry.Server.Setup;
 
 namespace Funbit.Ets.Telemetry.Server
@@ -29,6 +33,8 @@ namespace Funbit.Ets.Telemetry.Server
         int _showExistingInstanceMessage;
 
         MinimalHttpServer _server;
+        bool _hasCheckedForUpdates;
+        bool _startedMinimized;
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         readonly HttpClient _broadcastHttpClient = new HttpClient();
@@ -59,6 +65,8 @@ namespace Funbit.Ets.Telemetry.Server
                 WindowState = FormWindowState.Normal;
                 Activate();
                 SetForegroundWindow(Handle);
+                if (_startedMinimized && !_hasCheckedForUpdates)
+                    CheckForUpdates();
             }
             base.WndProc(ref m);
         }
@@ -169,11 +177,30 @@ namespace Funbit.Ets.Telemetry.Server
                 Program.UninstallMode ? "[UNINSTALL MODE]" : "");
             Text += @" " + AssemblyHelper.Version;
 
+            // initialize Start with Windows toggles from registry
+            var startWithWindows = IsStartWithWindowsEnabled();
+            startWithWindowsToolStripMenuItem.Checked = startWithWindows;
+            trayStartWithWindowsMenuItem.Checked = startWithWindows;
+
             // install or uninstall server if needed
             Setup();
 
             // start WebApi server
             Start();
+
+            if (Program.StartMinimized)
+            {
+                _startedMinimized = true;
+                trayIcon.Tag = "Already shown";
+                WindowState = FormWindowState.Minimized;
+                ShowInTaskbar = false;
+                trayIcon.ShowBalloonTip(3000, @"TruckSim GPS Telemetry Server",
+                    @"Running in the background. Double-click to open.", ToolTipIcon.Info);
+            }
+            else
+            {
+                CheckForUpdates();
+            }
         }
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -192,6 +219,11 @@ namespace Funbit.Ets.Telemetry.Server
             }
         }
     
+        void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RestoreWindow();
+        }
+
         void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
@@ -199,7 +231,18 @@ namespace Funbit.Ets.Telemetry.Server
 
         void trayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            RestoreWindow();
+        }
+
+        void RestoreWindow()
+        {
+            ShowWindow(Handle, SW_SHOWNORMAL);
+            ShowInTaskbar = true;
             WindowState = FormWindowState.Normal;
+            Activate();
+            SetForegroundWindow(Handle);
+            if (_startedMinimized && !_hasCheckedForUpdates)
+                CheckForUpdates();
         }
 
         void statusUpdateTimer_Tick(object sender, EventArgs e)
@@ -281,29 +324,6 @@ namespace Funbit.Ets.Telemetry.Server
             broadcastTimer.Enabled = true;
         }
         
-        void uninstallToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Make sure that game is not running during uninstall
-            if (Ets2ProcessHelper.IsEts2Running)
-            {
-                MessageBox.Show(this,
-                    @"In order to proceed the ETS2/ATS game must not be running." + Environment.NewLine +
-                    @"Please exit the game and try again.", @"Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            string exeFileName = Process.GetCurrentProcess().MainModule.FileName;
-            var startInfo = new ProcessStartInfo
-            {
-                Arguments = $"/C ping 127.0.0.1 -n 2 && \"{exeFileName}\" -uninstall",
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                FileName = "cmd.exe"
-            };
-            Process.Start(startInfo);
-            Application.Exit();
-        }
-
         void websiteToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ProcessHelper.OpenUrl("https://trucksimgps.com/");
@@ -322,6 +342,45 @@ namespace Funbit.Ets.Telemetry.Server
         void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // TODO: implement later
+        }
+
+        void startWithWindowsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            trayStartWithWindowsMenuItem.Checked = startWithWindowsToolStripMenuItem.Checked;
+            SetStartWithWindows(startWithWindowsToolStripMenuItem.Checked);
+        }
+
+        void trayStartWithWindowsMenuItem_Click(object sender, EventArgs e)
+        {
+            startWithWindowsToolStripMenuItem.Checked = trayStartWithWindowsMenuItem.Checked;
+            SetStartWithWindows(trayStartWithWindowsMenuItem.Checked);
+        }
+
+        const string StartupRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
+        const string StartupValueName = "TruckSimGPS";
+
+        bool IsStartWithWindowsEnabled()
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, false))
+            {
+                return key?.GetValue(StartupValueName) != null;
+            }
+        }
+
+        void SetStartWithWindows(bool enabled)
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, true))
+            {
+                if (enabled)
+                {
+                    string exePath = Process.GetCurrentProcess().MainModule.FileName;
+                    key.SetValue(StartupValueName, $"\"{exePath}\" -minimized");
+                }
+                else
+                {
+                    key.DeleteValue(StartupValueName, false);
+                }
+            }
         }
 
         void rerunSetupToolStripMenuItem_Click(object sender, EventArgs e)
@@ -422,6 +481,59 @@ namespace Funbit.Ets.Telemetry.Server
                 if (!statusUpdateTimer.Enabled)
                     statusUpdateTimer.Enabled = true;
             }
+        }
+
+        void trayIcon_BalloonTipClicked(object sender, EventArgs e)
+        {
+            RestoreWindow();
+        }
+
+        void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CheckForUpdates(reportErrors: true);
+        }
+
+        void CheckForUpdates(bool reportErrors = false)
+        {
+            _hasCheckedForUpdates = true;
+            AutoUpdater.ShowSkipButton = true;
+            AutoUpdater.ShowRemindLaterButton = true;
+            AutoUpdater.ReportErrors = reportErrors;
+            AutoUpdater.HttpUserAgent = "TruckSimGPS-Server";
+            AutoUpdater.ParseUpdateInfoEvent -= ParseGitHubRelease;
+            AutoUpdater.ParseUpdateInfoEvent += ParseGitHubRelease;
+            AutoUpdater.Start("https://api.github.com/repos/TruckSim-GPS/trucksim-gps-server/releases/latest");
+        }
+
+        void ParseGitHubRelease(ParseUpdateInfoEventArgs args)
+        {
+            var release = JObject.Parse(args.RemoteData);
+            string tagName = release.Value<string>("tag_name") ?? "";
+            string version = tagName.TrimStart('v');
+            string changelogUrl = release.Value<string>("html_url");
+            string downloadUrl = changelogUrl;
+
+            var assets = release["assets"] as JArray;
+            if (assets != null)
+            {
+                foreach (var asset in assets)
+                {
+                    string name = asset.Value<string>("name") ?? "";
+                    if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        downloadUrl = asset.Value<string>("browser_download_url");
+                        break;
+                    }
+                }
+            }
+
+            args.UpdateInfo = new UpdateInfoEventArgs
+            {
+                CurrentVersion = version,
+                ChangelogURL = changelogUrl,
+                DownloadURL = downloadUrl,
+                InstallerArgs = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CLOSEAPPLICATIONS"
+            };
         }
 
         void UpdateGameInfo()

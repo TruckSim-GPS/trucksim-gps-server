@@ -32,6 +32,10 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.trayMenuSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.trayStartWithWindowsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.trayMenuSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusUpdateTimer = new System.Windows.Forms.Timer(this.components);
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -54,11 +58,13 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.serverToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.rerunSetupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.uninstallToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startWithWindowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.websiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.donateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ets2PathTitleLabel = new System.Windows.Forms.Label();
             this.atsPathTitleLabel = new System.Windows.Forms.Label();
@@ -75,19 +81,45 @@
             this.trayIcon.ContextMenuStrip = this.contextMenuStrip;
             this.trayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("trayIcon.Icon")));
             this.trayIcon.Text = "TruckSim GPS Telemetry Server is running...";
+            this.trayIcon.BalloonTipClicked += new System.EventHandler(this.trayIcon_BalloonTipClicked);
             this.trayIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.trayIcon_MouseDoubleClick);
             // 
             // contextMenuStrip
             // 
-            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.closeToolStripMenuItem });
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.openToolStripMenuItem, this.trayMenuSeparator1, this.trayStartWithWindowsMenuItem, this.trayMenuSeparator2, this.closeToolStripMenuItem });
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(104, 26);
-            // 
+            this.contextMenuStrip.Size = new System.Drawing.Size(180, 82);
+            //
+            // openToolStripMenuItem
+            //
+            this.openToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.openToolStripMenuItem.Name = "openToolStripMenuItem";
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.openToolStripMenuItem.Text = "Open";
+            this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            //
+            // trayMenuSeparator1
+            //
+            this.trayMenuSeparator1.Name = "trayMenuSeparator1";
+            this.trayMenuSeparator1.Size = new System.Drawing.Size(176, 6);
+            //
+            // trayStartWithWindowsMenuItem
+            //
+            this.trayStartWithWindowsMenuItem.CheckOnClick = true;
+            this.trayStartWithWindowsMenuItem.Name = "trayStartWithWindowsMenuItem";
+            this.trayStartWithWindowsMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.trayStartWithWindowsMenuItem.Text = "Start with Windows";
+            this.trayStartWithWindowsMenuItem.Click += new System.EventHandler(this.trayStartWithWindowsMenuItem_Click);
+            //
+            // trayMenuSeparator2
+            //
+            this.trayMenuSeparator2.Name = "trayMenuSeparator2";
+            this.trayMenuSeparator2.Size = new System.Drawing.Size(176, 6);
+            //
             // closeToolStripMenuItem
-            // 
-            this.closeToolStripMenuItem.Image = global::Funbit.Ets.Telemetry.Server.Properties.Resources.CloseIcon;
+            //
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
@@ -298,7 +330,7 @@
             // 
             // serverToolStripMenu
             // 
-            this.serverToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.rerunSetupToolStripMenuItem, this.uninstallToolStripMenuItem });
+            this.serverToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.rerunSetupToolStripMenuItem, this.startWithWindowsToolStripMenuItem });
             this.serverToolStripMenu.Name = "serverToolStripMenu";
             this.serverToolStripMenu.Size = new System.Drawing.Size(51, 20);
             this.serverToolStripMenu.Text = "Server";
@@ -306,20 +338,21 @@
             // rerunSetupToolStripMenuItem
             // 
             this.rerunSetupToolStripMenuItem.Name = "rerunSetupToolStripMenuItem";
-            this.rerunSetupToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.rerunSetupToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.rerunSetupToolStripMenuItem.Text = "Re-run Setup...";
             this.rerunSetupToolStripMenuItem.Click += new System.EventHandler(this.rerunSetupToolStripMenuItem_Click);
-            // 
-            // uninstallToolStripMenuItem
-            // 
-            this.uninstallToolStripMenuItem.Name = "uninstallToolStripMenuItem";
-            this.uninstallToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.uninstallToolStripMenuItem.Text = "Uninstall";
-            this.uninstallToolStripMenuItem.Click += new System.EventHandler(this.uninstallToolStripMenuItem_Click);
-            // 
+            //
+            // startWithWindowsToolStripMenuItem
+            //
+            this.startWithWindowsToolStripMenuItem.CheckOnClick = true;
+            this.startWithWindowsToolStripMenuItem.Name = "startWithWindowsToolStripMenuItem";
+            this.startWithWindowsToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+            this.startWithWindowsToolStripMenuItem.Text = "Start with Windows";
+            this.startWithWindowsToolStripMenuItem.Click += new System.EventHandler(this.startWithWindowsToolStripMenuItem_Click);
+            //
             // helpToolStripMenu
             // 
-            this.helpToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.websiteToolStripMenuItem, this.helpToolStripMenuItem, this.donateToolStripMenuItem, this.aboutToolStripMenuItem });
+            this.helpToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.websiteToolStripMenuItem, this.helpToolStripMenuItem, this.donateToolStripMenuItem, this.toolStripSeparator2, this.checkForUpdatesToolStripMenuItem, this.aboutToolStripMenuItem });
             this.helpToolStripMenu.Name = "helpToolStripMenu";
             this.helpToolStripMenu.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenu.Text = "Help";
@@ -344,11 +377,23 @@
             this.donateToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.donateToolStripMenuItem.Text = "Get support on Discord";
             this.donateToolStripMenuItem.Click += new System.EventHandler(this.donateToolStripMenuItem_Click);
-            // 
+            //
+            // toolStripSeparator2
+            //
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(182, 6);
+            //
+            // checkForUpdatesToolStripMenuItem
+            //
+            this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
+            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.checkForUpdatesToolStripMenuItem.Text = "Check for Updates...";
+            this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
+            //
             // aboutToolStripMenuItem
-            // 
+            //
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Visible = false;
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
@@ -426,6 +471,10 @@
 
         private System.Windows.Forms.NotifyIcon trayIcon;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator trayMenuSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem trayStartWithWindowsMenuItem;
+        private System.Windows.Forms.ToolStripSeparator trayMenuSeparator2;
         private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
         private System.Windows.Forms.Timer statusUpdateTimer;
         private System.Windows.Forms.GroupBox groupBox1;
@@ -443,10 +492,12 @@
         private System.Windows.Forms.ToolStripMenuItem serverToolStripMenu;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenu;
         private System.Windows.Forms.ToolStripMenuItem rerunSetupToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem uninstallToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem startWithWindowsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem websiteToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem donateToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.Label ets2PathTitleLabel;
         private System.Windows.Forms.Label ets2PathLabel;

@@ -11,3 +11,5 @@
 *.log
 /_WorkingFiles
 source/.vs/Funbit.Ets.Telemetry/v14/*
+/installer/Output
+/installer/vc_redist.x64.exe
