@@ -37,8 +37,15 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
         {
             if (!File.Exists(SettingsFileName))
                 return new Settings();
-            return JsonConvert.DeserializeObject<Settings>(
-                File.ReadAllText(SettingsFileName, Encoding.UTF8));
+            try
+            {
+                return JsonConvert.DeserializeObject<Settings>(
+                    File.ReadAllText(SettingsFileName, Encoding.UTF8)) ?? new Settings();
+            }
+            catch
+            {
+                return new Settings();
+            }
         }
 
         public void Save()
