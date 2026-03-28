@@ -91,10 +91,31 @@ curl http://192.168.1.100:31377/api/ets2/telemetry
     "speedLimit": 90
   },
   "gameplay": {
+    "onJob": true,
     "jobFinished": false,
     "jobCancelled": false,
-    "jobDelivered": false,
-    "fined": false
+    "jobDelivered": true,
+    "fined": false,
+    "tollgate": true,
+    "ferry": false,
+    "train": false,
+    "refuel": false,
+    "refuelPayed": false,
+    "jobDeliveredDetails": {
+      "revenue": 23160,
+      "earnedXp": 120,
+      "cargoDamage": 0.02,
+      "distanceKm": 132.5,
+      "deliveryTime": 480,
+      "autoParked": false,
+      "autoLoaded": true
+    },
+    "jobCancelledDetails": { "penalty": 0 },
+    "finedDetails": { "amount": 0, "offence": "NoValue" },
+    "tollgateDetails": { "payAmount": 12 },
+    "ferryDetails": { "payAmount": 0, "sourceName": null, "targetName": null },
+    "trainDetails": { "payAmount": 0, "sourceName": null, "targetName": null },
+    "refuelDetails": { "amount": 0.0 }
   }
 }
 ```
@@ -108,9 +129,40 @@ The response includes the following top-level objects:
 | `trailers` | Array of attached trailers with placement and wear data |
 | `job` | Active job details: cities, companies, cargo, income, deadline |
 | `navigation` | In-game GPS: estimated time, distance, current speed limit |
-| `gameplay` | Events: job finished/cancelled/delivered, fines, tolls, ferries |
+| `gameplay` | Game events with toggle flags and detail objects (see below) |
 
 For the full list of fields, see [TelemetryV1.cs](source/Funbit.Ets.Telemetry.Server/Data/TelemetryV1.cs).
+
+### Gameplay Events
+
+The `gameplay` object exposes game events (job delivery, cancellation, fines, tolls, ferries, trains, refueling) using **toggle flags** and **detail objects**.
+
+**Event detection via XOR toggle:** The boolean flags (`jobDelivered`, `jobCancelled`, `fined`, `tollgate`, `ferry`, `train`) use a toggle pattern inherited from the game's telemetry plugin. Each time an event fires, the flag **flips** (`false` → `true` → `false` → ...). To detect events, compare the current value against the previous poll — a **change** in value means the event fired. The specific value (`true` or `false`) is irrelevant; only the transition matters.
+
+```
+Poll 1: jobDelivered = false   (store as previous)
+Poll 2: jobDelivered = false   (no change — no event)
+Poll 3: jobDelivered = true    (changed! — delivery event fired)
+Poll 4: jobDelivered = true    (no change — no event)
+Poll 5: jobDelivered = false   (changed! — another delivery event fired)
+```
+
+**Exceptions:**
+- `onJob` is a persistent state flag (`true` while a job is active), not a toggle.
+- `refuel` is a persistent flag (`true` while refueling is in progress, `false` when done).
+- `refuelPayed` is set to `true` when refueling completes.
+
+**Detail objects** (`jobDeliveredDetails`, `finedDetails`, etc.) contain data from the most recent event of that type. This data persists in shared memory until overwritten by the next event, so it is always available alongside the toggle flag when a change is detected.
+
+| Event | Toggle Flag | Detail Object | Key Fields |
+|-------|------------|---------------|------------|
+| Job delivered | `jobDelivered` | `jobDeliveredDetails` | `revenue`, `earnedXp`, `cargoDamage`, `distanceKm`, `deliveryTime`, `autoParked`, `autoLoaded` |
+| Job cancelled | `jobCancelled` | `jobCancelledDetails` | `penalty` |
+| Fined | `fined` | `finedDetails` | `amount`, `offence` |
+| Tollgate | `tollgate` | `tollgateDetails` | `payAmount` |
+| Ferry | `ferry` | `ferryDetails` | `payAmount`, `sourceName`, `targetName` |
+| Train | `train` | `trainDetails` | `payAmount`, `sourceName`, `targetName` |
+| Refuel | `refuel` | `refuelDetails` | `amount` |
 
 ### WebSocket (SignalR)
 

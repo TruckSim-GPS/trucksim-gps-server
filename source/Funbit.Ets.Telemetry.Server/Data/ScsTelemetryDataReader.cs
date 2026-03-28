@@ -49,13 +49,13 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
                 return new TelemetryV1
                 {
-                    ServerVersion = 2,
+                    ServerVersion = 3,
                     Game = game,
                     Truck = truck,
                     Trailers = trailers,
                     Job = job,
                     Navigation = nav,
-                    Gameplay = new GameplayV1() // optional, can be extended later
+                    Gameplay = MapGameplay(scs)
                 };
             }
         }
@@ -263,6 +263,66 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 EstimatedTime = eta,
                 EstimatedDistance = (int)n.NavigationDistance,
                 SpeedLimit = (int)(n.SpeedLimit?.Kph ?? 0f)
+            };
+        }
+
+        static GameplayV1 MapGameplay(SCSTelemetry scs)
+        {
+            var se = scs?.SpecialEventsValues;
+            var gp = scs?.GamePlay;
+
+            return new GameplayV1
+            {
+                OnJob = se?.OnJob ?? false,
+                JobFinished = se?.JobFinished ?? false,
+                JobCancelled = se?.JobCancelled ?? false,
+                JobDelivered = se?.JobDelivered ?? false,
+                Fined = se?.Fined ?? false,
+                Tollgate = se?.Tollgate ?? false,
+                Ferry = se?.Ferry ?? false,
+                Train = se?.Train ?? false,
+                Refuel = se?.Refuel ?? false,
+                RefuelPayed = se?.RefuelPayed ?? false,
+
+                JobDeliveredDetails = new JobDeliveredV1
+                {
+                    Revenue = gp?.JobDelivered?.Revenue ?? 0,
+                    EarnedXp = gp?.JobDelivered?.EarnedXp ?? 0,
+                    CargoDamage = gp?.JobDelivered?.CargoDamage ?? 0f,
+                    DistanceKm = gp?.JobDelivered?.DistanceKm ?? 0f,
+                    DeliveryTime = gp?.JobDelivered?.DeliveryTime?.Value ?? 0,
+                    AutoParked = gp?.JobDelivered?.AutoParked ?? false,
+                    AutoLoaded = gp?.JobDelivered?.AutoLoaded ?? false,
+                },
+                JobCancelledDetails = new JobCancelledV1
+                {
+                    Penalty = gp?.JobCancelled?.Penalty ?? 0,
+                },
+                FinedDetails = new FinedV1
+                {
+                    Amount = gp?.FinedEvent?.Amount ?? 0,
+                    Offence = (gp?.FinedEvent?.Offence ?? SCSSdkClient.Offence.NoValue).ToString(),
+                },
+                TollgateDetails = new TollgateV1
+                {
+                    PayAmount = gp?.TollgateEvent?.PayAmount ?? 0,
+                },
+                FerryDetails = new TransportV1
+                {
+                    PayAmount = gp?.FerryEvent?.PayAmount ?? 0,
+                    SourceName = gp?.FerryEvent?.SourceName,
+                    TargetName = gp?.FerryEvent?.TargetName,
+                },
+                TrainDetails = new TransportV1
+                {
+                    PayAmount = gp?.TrainEvent?.PayAmount ?? 0,
+                    SourceName = gp?.TrainEvent?.SourceName,
+                    TargetName = gp?.TrainEvent?.TargetName,
+                },
+                RefuelDetails = new RefuelV1
+                {
+                    Amount = gp?.RefuelEvent?.Amount ?? 0f,
+                }
             };
         }
 

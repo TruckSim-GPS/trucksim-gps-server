@@ -6,7 +6,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
     // Top-level REST v1 payload
     public class TelemetryV1
     {
-        public int ServerVersion { get; set; } = 2;
+        public int ServerVersion { get; set; } = 3;
         public GameV1 Game { get; set; }
         public TruckV1 Truck { get; set; }
         public List<TrailerV1> Trailers { get; set; }
@@ -162,6 +162,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
     public class GameplayV1
     {
+        public bool OnJob { get; set; }
         public bool JobFinished { get; set; }
         public bool JobCancelled { get; set; }
         public bool JobDelivered { get; set; }
@@ -171,6 +172,53 @@ namespace Funbit.Ets.Telemetry.Server.Data
         public bool Train { get; set; }
         public bool Refuel { get; set; }
         public bool RefuelPayed { get; set; }
+
+        public JobDeliveredV1 JobDeliveredDetails { get; set; }
+        public JobCancelledV1 JobCancelledDetails { get; set; }
+        public FinedV1 FinedDetails { get; set; }
+        public TollgateV1 TollgateDetails { get; set; }
+        public TransportV1 FerryDetails { get; set; }
+        public TransportV1 TrainDetails { get; set; }
+        public RefuelV1 RefuelDetails { get; set; }
+    }
+
+    public class JobDeliveredV1
+    {
+        public long Revenue { get; set; }
+        public int EarnedXp { get; set; }
+        public float CargoDamage { get; set; }
+        public float DistanceKm { get; set; }
+        public uint DeliveryTime { get; set; }
+        public bool AutoParked { get; set; }
+        public bool AutoLoaded { get; set; }
+    }
+
+    public class JobCancelledV1
+    {
+        public long Penalty { get; set; }
+    }
+
+    public class FinedV1
+    {
+        public long Amount { get; set; }
+        public string Offence { get; set; }
+    }
+
+    public class TollgateV1
+    {
+        public long PayAmount { get; set; }
+    }
+
+    public class TransportV1
+    {
+        public long PayAmount { get; set; }
+        public string SourceName { get; set; }
+        public string TargetName { get; set; }
+    }
+
+    public class RefuelV1
+    {
+        public float Amount { get; set; }
     }
 
     public class PlacementV1
