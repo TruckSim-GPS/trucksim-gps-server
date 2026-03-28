@@ -496,44 +496,89 @@ namespace Funbit.Ets.Telemetry.Server
         void CheckForUpdates(bool reportErrors = false)
         {
             _hasCheckedForUpdates = true;
-            AutoUpdater.ShowSkipButton = true;
-            AutoUpdater.ShowRemindLaterButton = true;
-            AutoUpdater.ReportErrors = reportErrors;
-            AutoUpdater.HttpUserAgent = "TruckSimGPS-Server";
-            AutoUpdater.ParseUpdateInfoEvent -= ParseGitHubRelease;
-            AutoUpdater.ParseUpdateInfoEvent += ParseGitHubRelease;
-            AutoUpdater.Start("https://api.github.com/repos/TruckSim-GPS/trucksim-gps-server/releases/latest");
-        }
 
-        void ParseGitHubRelease(ParseUpdateInfoEventArgs args)
-        {
-            var release = JObject.Parse(args.RemoteData);
-            string tagName = release.Value<string>("tag_name") ?? "";
-            string version = tagName.TrimStart('v');
-            string changelogUrl = release.Value<string>("html_url");
-            string downloadUrl = changelogUrl;
-
-            var assets = release["assets"] as JArray;
-            if (assets != null)
+            // Fetch release data ourselves with explicit UTF-8 encoding.
+            // AutoUpdater.NET's WebClient doesn't set Encoding, causing emoji garbling
+            // on some systems (known issues #735 and #632 on their repo).
+            System.Threading.Tasks.Task.Run(() =>
             {
-                foreach (var asset in assets)
+                try
                 {
-                    string name = asset.Value<string>("name") ?? "";
-                    if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    using (var client = new System.Net.WebClient())
                     {
-                        downloadUrl = asset.Value<string>("browser_download_url");
-                        break;
+                        client.Encoding = Encoding.UTF8;
+                        client.Headers[System.Net.HttpRequestHeader.UserAgent] = "TruckSimGPS-Server";
+                        string json = client.DownloadString(
+                            "https://api.github.com/repos/TruckSim-GPS/trucksim-gps-server/releases/latest");
+
+                        var release = JObject.Parse(json);
+                        string tagName = release.Value<string>("tag_name") ?? "";
+                        string version = tagName.TrimStart('v');
+                        string changelogUrl = release.Value<string>("html_url");
+                        string downloadUrl = changelogUrl;
+                        string releaseBody = release.Value<string>("body") ?? "";
+
+                        var assets = release["assets"] as JArray;
+                        if (assets != null)
+                        {
+                            foreach (var asset in assets)
+                            {
+                                string name = asset.Value<string>("name") ?? "";
+                                if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    downloadUrl = asset.Value<string>("browser_download_url");
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Only offer the update if an installer .exe asset is attached to the release
+                        bool hasInstaller = downloadUrl != changelogUrl;
+                        var installedVersion = Assembly.GetEntryAssembly().GetName().Version;
+
+                        var args = new UpdateInfoEventArgs
+                        {
+                            CurrentVersion = version,
+                            ChangelogURL = changelogUrl,
+                            DownloadURL = downloadUrl,
+                            InstallerArgs = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS",
+                            InstalledVersion = installedVersion,
+                            IsUpdateAvailable = hasInstaller && new Version(version) > installedVersion
+                        };
+
+                        BeginInvoke(new Action(() => ShowUpdateResult(args, releaseBody, reportErrors)));
                     }
                 }
+                catch (Exception)
+                {
+                    if (reportErrors)
+                        BeginInvoke(new Action(() =>
+                            MessageBox.Show(this, "Could not reach the update server. Please try again later.",
+                                "Update Check Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning)));
+                }
+            });
+        }
+
+        void ShowUpdateResult(UpdateInfoEventArgs args, string releaseBody, bool reportErrors)
+        {
+            if (!args.IsUpdateAvailable)
+            {
+                if (reportErrors)
+                    MessageBox.Show(this, $"You are running the latest version (v{args.InstalledVersion}).",
+                        "No Update Available", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
 
-            args.UpdateInfo = new UpdateInfoEventArgs
+            using (var form = new UpdateForm(
+                args.CurrentVersion, args.InstalledVersion.ToString(),
+                releaseBody, args.ChangelogURL))
             {
-                CurrentVersion = version,
-                ChangelogURL = changelogUrl,
-                DownloadURL = downloadUrl,
-                InstallerArgs = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CLOSEAPPLICATIONS"
-            };
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    if (AutoUpdater.DownloadUpdate(args))
+                        Application.Exit();
+                }
+            }
         }
 
         void UpdateGameInfo()

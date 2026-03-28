@@ -2,7 +2,8 @@
 ; Requires Inno Setup 6.x or later
 
 #ifndef AppVersion
-  #define AppVersion "1.1.0"
+  #define FullVersion GetFileVersion("..\source\Funbit.Ets.Telemetry.Server\bin\Release\TruckSimGPS_Server.exe")
+  #define AppVersion Copy(FullVersion, 1, RPos(".", FullVersion) - 1)
 #endif
 
 [Setup]
@@ -49,6 +50,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable..."; Check: not IsVCRedistInstalled; Flags: waituntilterminated
 Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)"" dir=in action=allow protocol=TCP localport=31377 remoteip=localsubnet"; StatusMsg: "Configuring firewall..."; Flags: runhidden waituntilterminated
 Filename: "{app}\TruckSimGPS_Server.exe"; Description: "Launch TruckSim GPS Telemetry Server"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\TruckSimGPS_Server.exe"; Flags: nowait; Check: IsSilentInstall
 
 [UninstallRun]
 Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)"""; Flags: runhidden; RunOnceId: "RemoveFirewallRule"
@@ -60,6 +62,11 @@ Type: filesandordirs; Name: "{app}\dev"
 Type: filesandordirs; Name: "{app}\docs"
 
 [Code]
+function IsSilentInstall: Boolean;
+begin
+  Result := WizardSilent();
+end;
+
 function IsVCRedistInstalled: Boolean;
 var
   Installed: Cardinal;

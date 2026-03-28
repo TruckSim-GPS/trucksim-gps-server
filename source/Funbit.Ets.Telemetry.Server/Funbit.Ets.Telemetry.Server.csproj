@@ -184,6 +184,9 @@
     <Compile Include="Setup\SetupStatus.cs" />
     <Compile Include="Setup\UrlReservationSetup.cs" />
     <Compile Include="Setup\VCRedistSetup.cs" />
+    <Compile Include="UpdateForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MinimalHttpServer.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="MainForm.cs">
