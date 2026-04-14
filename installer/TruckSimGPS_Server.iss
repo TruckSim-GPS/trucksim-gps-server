@@ -48,12 +48,10 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable..."; Check: not IsVCRedistInstalled; Flags: waituntilterminated
-Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)"" dir=in action=allow protocol=TCP localport=31377 remoteip=localsubnet"; StatusMsg: "Configuring firewall..."; Flags: runhidden waituntilterminated
 Filename: "{app}\TruckSimGPS_Server.exe"; Description: "Launch TruckSim GPS Telemetry Server"; Flags: nowait postinstall skipifsilent
 Filename: "{app}\TruckSimGPS_Server.exe"; Flags: nowait; Check: IsSilentInstall
 
 [UninstallRun]
-Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)"""; Flags: runhidden; RunOnceId: "RemoveFirewallRule"
 Filename: "netsh"; Parameters: "http delete urlacl url=http://+:31377/"; Flags: runhidden; RunOnceId: "RemoveUrlAcl"
 
 [UninstallDelete]
@@ -129,6 +127,55 @@ begin
     DeleteFile(DllPath);
 end;
 
+procedure ConfigureFirewallRules;
+var
+  ResultCode: Integer;
+  ExePath: String;
+  NetshPath: String;
+begin
+  ExePath := ExpandConstant('{app}\TruckSimGPS_Server.exe');
+  NetshPath := ExpandConstant('{sys}\netsh.exe');
+
+  { Cleanup: delete legacy and any previous rules. Errors are ignored — "rule not found"
+    is expected on first install and non-fatal. }
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TruckSim GPS Telemetry Server"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TruckSim GPS Telemetry Server (TCP Port)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TruckSim GPS Telemetry Server (UDP Port)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name=all program="' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+
+  { Add the three rules. Primary program-based rule covers TCP REST and future UDP
+    auto-discovery. The two port-based rules are belt-and-suspenders fallbacks. }
+  Exec(NetshPath, 'advfirewall firewall add rule name="TruckSim GPS Telemetry Server" dir=in action=allow program="' + ExePath + '" profile=any enable=yes description="Allow inbound traffic to TruckSim GPS Telemetry Server"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall add rule name="TruckSim GPS Telemetry Server (TCP Port)" dir=in action=allow protocol=TCP localport=31377 profile=any enable=yes description="TCP fallback for TruckSim GPS Telemetry Server"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall add rule name="TruckSim GPS Telemetry Server (UDP Port)" dir=in action=allow protocol=UDP localport=31377 profile=any enable=yes description="UDP fallback for TruckSim GPS Telemetry Server (auto-discovery)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+procedure RemoveFirewallRules;
+var
+  ResultCode: Integer;
+  ExePath: String;
+  NetshPath: String;
+begin
+  ExePath := ExpandConstant('{app}\TruckSimGPS_Server.exe');
+  NetshPath := ExpandConstant('{sys}\netsh.exe');
+
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TRUCKSIM GPS TELEMETRY SERVER (PORT 31377)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TruckSim GPS Telemetry Server"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TruckSim GPS Telemetry Server (TCP Port)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name="TruckSim GPS Telemetry Server (UDP Port)"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(NetshPath, 'advfirewall firewall delete rule name=all program="' + ExePath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  { Fire at ssInstall — before files are copied and before [Run] entries execute, so
+    the app always launches (including the silent-install [Run] entry) with rules in
+    place. netsh accepts program paths that don't yet exist on disk. }
+  if CurStep = ssInstall then
+    ConfigureFirewallRules;
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   LocalAppDataPath, SettingsFile, SettingsJson: String;
@@ -138,6 +185,8 @@ var
 begin
   if CurUninstallStep = usUninstall then
   begin
+    RemoveFirewallRules;
+
     { Read game paths from Settings.json and remove plugin DLLs before deleting settings }
     SettingsFile := ExpandConstant('{localappdata}\TruckSim GPS Telemetry Server\Settings.json');
     if FileExists(SettingsFile) then
