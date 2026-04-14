@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build-and-attach:
@@ -42,6 +43,39 @@ jobs:
 
       - name: Compile installer
         run: iscc /DAppVersion=${{ steps.version.outputs.VERSION }} installer/TruckSimGPS_Server.iss
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign installer
+        uses: azure/artifact-signing-action@v1.2.0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          endpoint: https://eus.codesigning.azure.net/
+          signing-account-name: cocoasandwich
+          certificate-profile-name: cocoasandwich-codesigning
+          files-folder: ${{ github.workspace }}/installer/Output
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Verify installer is signed
+        shell: pwsh
+        run: |
+          $files = @(Get-Item "installer/Output/TruckSimGPS_Server_Setup_*.exe")
+          if ($files.Count -ne 1) { Write-Error "Expected 1 installer, found $($files.Count)"; exit 1 }
+          $sig = Get-AuthenticodeSignature $files[0].FullName
+          if ($sig.Status -ne 'Valid') {
+            Write-Error "Installer signature invalid: $($sig.Status)"
+            exit 1
+          }
+          Write-Output "Signature valid: $($sig.SignerCertificate.Subject)"
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
