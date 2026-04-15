@@ -404,11 +404,19 @@ namespace Funbit.Ets.Telemetry.Server.Setup
 
             public void ConfigureGamePath(IWin32Window owner)
             {
-                // If path is already valid and not skipped, ask user if they want to keep or change it
+                // If the stored path is already valid and not skipped:
+                //  - Silent setup (auto-triggered after an update or normal startup): trust the
+                //    existing path without prompting. The user has already configured it before
+                //    and a keep-or-change popup would just be noise.
+                //  - Re-run Setup triggered explicitly from the menu (Program.ForceSetupMode):
+                //    fall through to the confirm dialog so advanced users can change the path.
                 if (IsPathValid() && GamePath != InstallationSkippedPath && !string.IsNullOrEmpty(GamePath))
                 {
+                    if (!Program.ForceSetupMode)
+                        return;
+
                     var gameFullName = _gameName == "ETS2" ? "Euro Truck Simulator 2" : "American Truck Simulator";
-                    
+
                     var confirmResult = MessageBox.Show(owner,
                         $">>> {gameFullName} <<<" + Environment.NewLine +
                         "Installation is currently configured at:" + Environment.NewLine + Environment.NewLine +
@@ -418,7 +426,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                         @"[NO]     = Browse for a different location",
                         $"{gameFullName} Setup", MessageBoxButtons.YesNo, MessageBoxIcon.Information,
                         MessageBoxDefaultButton.Button1);
-                    
+
                     if (confirmResult == DialogResult.Yes)
                     {
                         // User wants to keep the current path
@@ -429,7 +437,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                     BrowseForPath(owner);
                     return;
                 }
-                
+
                 // Path is invalid, null, or user wants to change it - try auto-detection first
                 DetectPath();
                 if (!IsPathValid())
