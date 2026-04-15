@@ -626,16 +626,18 @@ namespace Funbit.Ets.Telemetry.Server
             {
                 case PluginValidationResult.Valid:
                     return "✓ Plugin OK";
-                    
+
                 case PluginValidationResult.PluginMissing:
                     return "⚠ Plugin missing";
-                    
+
                 case PluginValidationResult.InvalidPath:
                     if (baseMessage == "Installation skipped")
                         return "○ Not configured";
+                    else if (baseMessage == "Installation corrupted")
+                        return "⚠ Install corrupted (please reinstall)";
                     else
                         return "✗ Invalid path (Server > Re-run Setup)";
-                        
+
                 default:
                     return "Unknown";
             }
@@ -797,45 +799,48 @@ namespace Funbit.Ets.Telemetry.Server
             try
             {
                 string gamePath = gameName == "ETS2" ? Settings.Instance.Ets2GamePath : Settings.Instance.AtsGamePath;
-                
+
                 if (string.IsNullOrEmpty(gamePath))
                 {
                     statusMessage = "Not configured";
                     return PluginValidationResult.InvalidPath;
                 }
-                
+
                 if (gamePath == "N/A")
                 {
                     statusMessage = "Installation skipped";
                     return PluginValidationResult.InvalidPath;
                 }
-                
-                // Use the same enhanced validation logic as PluginSetup
+
                 if (!IsValidGamePath(gamePath, gameName))
                 {
                     statusMessage = "Invalid directory";
                     return PluginValidationResult.InvalidPath;
                 }
-                
-                string x64DllPath = System.IO.Path.Combine(gamePath, @"bin\win_x64\plugins\trucksim-gps-telemetry.dll");
-                string x86DllPath = System.IO.Path.Combine(gamePath, @"bin\win_x86\plugins\trucksim-gps-telemetry.dll");
 
-                string x64Md5 = PluginSetup.ComputeMd5(x64DllPath);
-                string x86Md5 = PluginSetup.ComputeMd5(x86DllPath);
-
-#if DEBUG
-                Console.WriteLine($"PLUGIN DEBUG: {gameName} x64 MD5: expected='{PluginSetup.TelemetryX64DllMd5}', actual='{x64Md5}'");
-                Console.WriteLine($"PLUGIN DEBUG: {gameName} x86 MD5: expected='{PluginSetup.TelemetryX86DllMd5}', actual='{x86Md5}'");
-#endif
-
-                if (x64Md5 != PluginSetup.TelemetryX64DllMd5 || x86Md5 != PluginSetup.TelemetryX86DllMd5)
+                var state = PluginSetup.GetPluginState(gamePath);
+                switch (state)
                 {
-                    statusMessage = "Plugin missing or outdated";
-                    return PluginValidationResult.PluginMissing;
+                    case PluginSetup.PluginState.Valid:
+                        statusMessage = "Plugin installed";
+                        return PluginValidationResult.Valid;
+
+                    case PluginSetup.PluginState.NotInstalled:
+                    case PluginSetup.PluginState.Outdated:
+                        statusMessage = "Plugin missing or outdated";
+                        return PluginValidationResult.PluginMissing;
+
+                    case PluginSetup.PluginState.LocalDllMissing:
+                        // InvalidPath (not PluginMissing): we don't want to show the
+                        // "Copy plugin" button, because clicking it would re-try File.Copy
+                        // from the same missing shipped DLL and fail with a confusing error.
+                        statusMessage = "Installation corrupted";
+                        return PluginValidationResult.InvalidPath;
+
+                    default:
+                        statusMessage = "Unknown state";
+                        return PluginValidationResult.InvalidPath;
                 }
-                
-                statusMessage = "Plugin installed";
-                return PluginValidationResult.Valid;
             }
             catch (Exception ex)
             {
@@ -875,14 +880,14 @@ namespace Funbit.Ets.Telemetry.Server
                     return;
                 }
                 
-                // Define source plugin paths (from telemetry server installation)
-                const string TelemetryDllName = "trucksim-gps-telemetry.dll";
-                string sourceX86Path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x86\plugins", TelemetryDllName);
-                string sourceX64Path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x64\plugins", TelemetryDllName);
-                
+                // Source plugin paths come from PluginSetup so we stay in sync with the
+                // single source of truth for where the shipped DLLs live.
+                string sourceX86Path = PluginSetup.LocalX86PluginPath;
+                string sourceX64Path = PluginSetup.LocalX64PluginPath;
+
                 // Define destination plugin paths
-                string destX86Path = System.IO.Path.Combine(gamePath, @"bin\win_x86\plugins", TelemetryDllName);
-                string destX64Path = System.IO.Path.Combine(gamePath, @"bin\win_x64\plugins", TelemetryDllName);
+                string destX86Path = System.IO.Path.Combine(gamePath, @"bin\win_x86\plugins", PluginSetup.TelemetryDllName);
+                string destX64Path = System.IO.Path.Combine(gamePath, @"bin\win_x64\plugins", PluginSetup.TelemetryDllName);
                 
                 // Ensure destination directories exist
                 string destX86Dir = System.IO.Path.GetDirectoryName(destX86Path);

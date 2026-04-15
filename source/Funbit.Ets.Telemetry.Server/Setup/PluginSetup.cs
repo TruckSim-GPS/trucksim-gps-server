@@ -14,8 +14,23 @@ namespace Funbit.Ets.Telemetry.Server.Setup
     {
         static readonly log4net.ILog Log = log4net.LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        internal const string TelemetryX64DllMd5 = "ad8a04a88e9b35f153facdffef4ecf94";
-        internal const string TelemetryX86DllMd5 = "7b37089f5c3d503e73368dfde3f841f1";
+        internal const string TelemetryDllName = "trucksim-gps-telemetry.dll";
+
+        // Paths to the plugin DLLs shipped alongside TruckSimGPS_Server.exe. These are the
+        // source of truth for "what the plugin should look like" — the game folder copy is
+        // compared against these.
+        internal static string LocalX64PluginPath => Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x64\plugins", TelemetryDllName);
+        internal static string LocalX86PluginPath => Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x86\plugins", TelemetryDllName);
+
+        public enum PluginState
+        {
+            Valid,              // Game folder plugin DLLs match the ones shipped with this server build.
+            NotInstalled,       // Game folder plugin DLLs are missing.
+            Outdated,           // Game folder plugin DLLs exist but differ from the shipped ones.
+            LocalDllMissing     // Shipped plugin DLLs are missing — server install is corrupted.
+        }
 
         internal static string ComputeMd5(string fileName)
         {
@@ -27,6 +42,36 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 var hash = provider.ComputeHash(bytes);
                 return string.Concat(hash.Select(b => $"{b:x02}"));
             }
+        }
+
+        /// <summary>
+        /// Compares the plugin DLLs in the given game folder against the ones shipped with this
+        /// server build and returns a state indicating what (if anything) needs to happen.
+        /// The caller is responsible for ensuring that <paramref name="gamePath"/> points to a
+        /// real ETS2/ATS installation — this method only looks at the plugin files.
+        /// </summary>
+        public static PluginState GetPluginState(string gamePath)
+        {
+            var localX64Md5 = ComputeMd5(LocalX64PluginPath);
+            var localX86Md5 = ComputeMd5(LocalX86PluginPath);
+            if (localX64Md5 == null || localX86Md5 == null)
+            {
+                Log.Error("Shipped plugin DLLs are missing from the server install directory. " +
+                    "The TruckSim GPS Telemetry Server installation may be corrupted or the " +
+                    "files may have been quarantined by security software.");
+                return PluginState.LocalDllMissing;
+            }
+
+            var gameX64Md5 = ComputeMd5(Path.Combine(gamePath, @"bin\win_x64\plugins", TelemetryDllName));
+            var gameX86Md5 = ComputeMd5(Path.Combine(gamePath, @"bin\win_x86\plugins", TelemetryDllName));
+
+            if (gameX64Md5 == null || gameX86Md5 == null)
+                return PluginState.NotInstalled;
+
+            if (gameX64Md5 != localX64Md5 || gameX86Md5 != localX86Md5)
+                return PluginState.Outdated;
+
+            return PluginState.Valid;
         }
 
         const string Ets2 = "ETS2";
@@ -128,7 +173,6 @@ namespace Funbit.Ets.Telemetry.Server.Setup
         class GameState
         {
             const string InstallationSkippedPath = "N/A";
-            const string TelemetryDllName = "trucksim-gps-telemetry.dll";
 
             readonly string _gameName;
 
@@ -167,8 +211,7 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 if (!IsPathValid())
                     return false;
 
-                return Md5(GetTelemetryPluginDllFileName(GamePath, x64: true)) == TelemetryX64DllMd5 &&
-                    Md5(GetTelemetryPluginDllFileName(GamePath, x64: false)) == TelemetryX86DllMd5;
+                return GetPluginState(GamePath) == PluginState.Valid;
             }
             
             bool IsValidGameInstallation(string gamePath)
@@ -205,10 +248,10 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 string x86DllFileName = GetTelemetryPluginDllFileName(GamePath, x64: false);
 
                 Log.InfoFormat("Copying {1} x86 plugin DLL file to: {0}", x86DllFileName, _gameName);
-                File.Copy(LocalEts2X86TelemetryPluginDllFileName, x86DllFileName, true);
+                File.Copy(LocalX86PluginPath, x86DllFileName, true);
 
                 Log.InfoFormat("Copying {1} x64 plugin DLL file to: {0}", x64DllFileName, _gameName);
-                File.Copy(LocalEts2X64TelemetryPluginDllFileName, x64DllFileName, true);
+                File.Copy(LocalX64PluginPath, x64DllFileName, true);
             }
 
             public void UninstallPlugin()
@@ -326,18 +369,6 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                 return steamKey?.GetValue("SteamPath") as string;
             }
 
-            static string LocalEts2X86TelemetryPluginDllFileName => Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x86\plugins", TelemetryDllName);
-
-            static string LocalEts2X64TelemetryPluginDllFileName => Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory, @"TruckSimGPSPlugins\win_x64\plugins", TelemetryDllName);
-
-            static string FindLocalTelemetryPluginDll(bool x64)
-            {
-                var arch = x64 ? "win_x64" : "win_x86";
-                return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TruckSimGPSPlugins", arch, "plugins", TelemetryDllName);
-            }
-            
             static string GetPluginPath(string gamePath, bool x64)
             {
                 return Path.Combine(gamePath, x64 ? @"bin\win_x64\plugins" : @"bin\win_x86\plugins");
@@ -350,8 +381,6 @@ namespace Funbit.Ets.Telemetry.Server.Setup
                     Directory.CreateDirectory(path);
                 return Path.Combine(path, TelemetryDllName);
             }
-            
-            static string Md5(string fileName) => ComputeMd5(fileName);
 
             public void DetectPath()
             {
