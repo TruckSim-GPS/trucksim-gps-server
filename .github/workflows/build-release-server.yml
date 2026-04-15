@@ -28,6 +28,46 @@ jobs:
       - name: Build Release
         run: msbuild source/Funbit.Ets.Telemetry.sln /p:Configuration=Release
 
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign application binaries
+        uses: azure/artifact-signing-action@v1.2.0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          endpoint: https://eus.codesigning.azure.net/
+          signing-account-name: cocoasandwich
+          certificate-profile-name: cocoasandwich-codesigning
+          files: |
+            ${{ github.workspace }}/source/Funbit.Ets.Telemetry.Server/bin/Release/TruckSimGPS_Server.exe
+            ${{ github.workspace }}/source/Funbit.Ets.Telemetry.Server/bin/Release/TruckSimGPSPlugins/win_x64/plugins/trucksim-gps-telemetry.dll
+            ${{ github.workspace }}/source/Funbit.Ets.Telemetry.Server/bin/Release/TruckSimGPSPlugins/win_x86/plugins/trucksim-gps-telemetry.dll
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Verify application binaries are signed
+        shell: pwsh
+        run: |
+          $files = @(
+            "source/Funbit.Ets.Telemetry.Server/bin/Release/TruckSimGPS_Server.exe",
+            "source/Funbit.Ets.Telemetry.Server/bin/Release/TruckSimGPSPlugins/win_x64/plugins/trucksim-gps-telemetry.dll",
+            "source/Funbit.Ets.Telemetry.Server/bin/Release/TruckSimGPSPlugins/win_x86/plugins/trucksim-gps-telemetry.dll"
+          )
+          foreach ($f in $files) {
+            $sig = Get-AuthenticodeSignature $f
+            if ($sig.Status -ne 'Valid') {
+              Write-Error "Signature invalid for $f : $($sig.Status)"
+              exit 1
+            }
+            Write-Output "Signature valid: $f"
+          }
+
       - name: Download VC++ Redistributable
         run: Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile installer/vc_redist.x64.exe
 
@@ -43,13 +83,6 @@ jobs:
 
       - name: Compile installer
         run: iscc /DAppVersion=${{ steps.version.outputs.VERSION }} installer/TruckSimGPS_Server.iss
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Sign installer
         uses: azure/artifact-signing-action@v1.2.0
