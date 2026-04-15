@@ -12,6 +12,11 @@ permissions:
 jobs:
   build-and-attach:
     runs-on: windows-latest
+    # Scopes the OIDC token's subject claim to the "release" GitHub environment
+    # (repo:TruckSim-GPS/trucksim-gps-server:environment:release) so one Azure
+    # federated credential matches every release tag and every manual dispatch,
+    # regardless of ref name. Environment is auto-created on first run.
+    environment: release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
