@@ -22,6 +22,13 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
         public static string LastRunningGamePath { get; set; }
 
         /// <summary>
+        /// Returns the product version of the last detected running game's exe (e.g. "1.59.1"),
+        /// or null if not available. Read from the file's version metadata, not from the SCS SDK
+        /// (which only reports its own API schema version).
+        /// </summary>
+        public static string LastRunningGameProductVersion { get; set; }
+
+        /// <summary>
         /// Checks whether ETS2 game process is running right now. The maximum check frequency is restricted to 1 second.
         /// </summary>
         /// <returns>True if ETS2 process is run, false otherwise.</returns>
@@ -81,9 +88,11 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
                                         }
 
                                         LastRunningGamePath = gameRoot;
+                                        LastRunningGameProductVersion = FileVersionInfo.GetVersionInfo(exePath).ProductVersion;
 #if DEBUG
                                         Console.WriteLine($"PROCESS DEBUG: Exe path: '{exePath}'");
                                         Console.WriteLine($"PROCESS DEBUG: Game root: '{LastRunningGamePath}'");
+                                        Console.WriteLine($"PROCESS DEBUG: Game product version: '{LastRunningGameProductVersion}'");
 #endif
                                     }
                                     catch (Exception ex)
@@ -92,6 +101,7 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
                                         Console.WriteLine($"PROCESS DEBUG: Failed to get process path: {ex.Message}");
 #endif
                                         LastRunningGamePath = null;
+                                        LastRunningGameProductVersion = null;
                                     }
 
                                     _lastProcessId = currentPid;
@@ -108,6 +118,7 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
                     }
                     _cachedRunningFlag = false;
                     _lastProcessId = 0; // Clear cache when no game running
+                    LastRunningGameProductVersion = null;
                 }
                 return _cachedRunningFlag;
             }
