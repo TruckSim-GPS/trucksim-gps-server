@@ -30,6 +30,10 @@ namespace Funbit.Ets.Telemetry.Server.Data
             {
                 var scs = _sharedMemory.Update<SCSTelemetry>();
 
+                // Plugin can leave SdkActive=true after a hard crash; trust the process scan.
+                if (!Ets2ProcessHelper.IsEts2Running)
+                    scs = null;
+
                 var game = new GameV1
                 {
                     Connected = scs?.SdkActive == true,
