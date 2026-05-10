@@ -44,10 +44,11 @@ namespace Funbit.Ets.Telemetry.Server.Helpers
                     {
                         try
                         {
-                            bool running = process.MainWindowTitle.StartsWith("Euro Truck Simulator 2") &&
-                                           process.ProcessName == "eurotrucks2"
-                                           || (process.MainWindowTitle.StartsWith("American Truck Simulator") &&
-                                           process.ProcessName == "amtrucks");
+                            // ProcessName only — MainWindowTitle is mutated by third-party
+                            // overlays (VTLog) and localized game builds, both of which broke
+                            // the previous StartsWith("Euro Truck Simulator 2") check.
+                            bool running = process.ProcessName == "eurotrucks2" ||
+                                           process.ProcessName == "amtrucks";
                             if (running)
                             {
                                 _cachedRunningFlag = true;
