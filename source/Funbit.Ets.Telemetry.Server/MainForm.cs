@@ -1,8 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -580,9 +583,245 @@ namespace Funbit.Ets.Telemetry.Server
             {
                 if (form.ShowDialog(this) == DialogResult.OK)
                 {
-                    if (AutoUpdater.DownloadUpdate(args))
+                    if (DownloadVerifyAndLaunchUpdate(args))
                         Application.Exit();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Downloads the installer, verifies its Authenticode signature against the pinned
+        /// signer identity, and launches it. Returns true if the installer was launched
+        /// and the caller should exit; false if anything failed (download error, signature
+        /// mismatch, downgrade attempt) — in that case the user continues running the current
+        /// version.
+        ///
+        /// TOCTOU defense: we hold an exclusive-write file lock (FileShare.Read denies write
+        /// and delete to other processes) from after download through Process.Start. Once
+        /// Process.Start returns, Windows pins the file via the spawned process's section
+        /// mapping, so the handle can be released safely.
+        /// </summary>
+        bool DownloadVerifyAndLaunchUpdate(UpdateInfoEventArgs args)
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                $"TruckSimGPS_Update_{Guid.NewGuid():N}.exe");
+
+            // Step 1: Download with a progress dialog. The download is kicked off from the
+            // dialog's Shown event so DownloadFileCompleted cannot fire before ShowDialog
+            // has a running message pump (otherwise dialog.Close() would no-op and the
+            // dialog would hang).
+            Exception downloadError = null;
+            using (var dialog = new UpdateDownloadDialog())
+            using (var client = new WebClient())
+            {
+                client.Headers[HttpRequestHeader.UserAgent] = "TruckSimGPS-Server";
+                client.DownloadProgressChanged += (s, e) => dialog.SetProgress(e.ProgressPercentage);
+                client.DownloadFileCompleted += (s, e) =>
+                {
+                    downloadError = e.Error;
+                    dialog.MarkDone();
+                };
+                dialog.Shown += (s, e) =>
+                    client.DownloadFileAsync(new Uri(args.DownloadURL), tempPath);
+                dialog.ShowDialog(this);
+            }
+
+            if (downloadError != null)
+            {
+                Log.Error("Update download failed", downloadError);
+                SafeDelete(tempPath);
+                MessageBox.Show(this,
+                    "Could not download the update. Please check your internet connection and try again.",
+                    "Update Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            // Step 2-4 must hold the lock contiguously: verify, downgrade check, launch.
+            FileStream lockHandle;
+            try
+            {
+                // FileShare.Read denies write and delete from other processes; permits our
+                // own verifier and the OS process loader to read.
+                lockHandle = new FileStream(tempPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Could not open downloaded update for verification", ex);
+                SafeDelete(tempPath);
+                MessageBox.Show(this,
+                    "The downloaded update could not be opened. Please try again.",
+                    "Update Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            using (lockHandle)
+            {
+                // Step 2: Verify Authenticode signature against pinned signer + root.
+                var verification = SignatureVerifier.Verify(tempPath);
+                if (!verification.IsValid)
+                {
+                    Log.ErrorFormat(
+                        "Update rejected — signature verification failed. Reason: {0}. Signer: {1}",
+                        verification.FailureReason,
+                        verification.SignerSubject ?? "<unknown>");
+                    // Release the lock so SafeDelete can remove the file.
+                    lockHandle.Dispose();
+                    SafeDelete(tempPath);
+                    MessageBox.Show(this,
+                        "The downloaded update could not be verified and was rejected.\n\n" +
+                        "Please report this to support — your current version will keep working.",
+                        "Update Verification Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                // Step 3: Downgrade-attack guard — refuse to launch an installer whose
+                // ProductVersion is older than what is currently running. An attacker who
+                // can substitute a release asset on GitHub could otherwise point users at an
+                // older legitimately-signed installer with a known vulnerability.
+                if (!CheckInstallerIsNotADowngrade(tempPath, args.InstalledVersion, out string downgradeReason))
+                {
+                    Log.ErrorFormat("Update rejected — downgrade guard failed: {0}", downgradeReason);
+                    lockHandle.Dispose();
+                    SafeDelete(tempPath);
+                    MessageBox.Show(this,
+                        "The downloaded update could not be verified and was rejected.\n\n" +
+                        "Please report this to support — your current version will keep working.",
+                        "Update Verification Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                Log.InfoFormat("Update signature verified. Signer: {0}", verification.SignerSubject);
+
+                // Step 4: Launch the verified installer. ShellExecute triggers UAC because
+                // the installer manifest requires admin. Once Process.Start returns,
+                // Windows has mapped the executable section and the lock can be safely
+                // released — closing the using block.
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = tempPath,
+                        Arguments = args.InstallerArgs ?? string.Empty,
+                        UseShellExecute = true
+                    });
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to launch verified update installer", ex);
+                    lockHandle.Dispose();
+                    SafeDelete(tempPath);
+                    MessageBox.Show(this,
+                        $"The update was verified but could not be launched:\n\n{ex.Message}",
+                        "Update Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads the downloaded installer's ProductVersion and confirms it is at least the
+        /// currently running version. Returns false (with a reason) if the downloaded version
+        /// is older or unreadable — both are treated as rejections.
+        /// </summary>
+        static bool CheckInstallerIsNotADowngrade(string installerPath, Version currentVersion, out string reason)
+        {
+            try
+            {
+                var info = FileVersionInfo.GetVersionInfo(installerPath);
+                if (string.IsNullOrEmpty(info.ProductVersion))
+                {
+                    reason = "Installer is missing ProductVersion metadata";
+                    return false;
+                }
+
+                if (!Version.TryParse(info.ProductVersion, out Version downloadedVersion))
+                {
+                    reason = $"Could not parse installer ProductVersion '{info.ProductVersion}'";
+                    return false;
+                }
+
+                if (downloadedVersion < currentVersion)
+                {
+                    reason = $"Installer version {downloadedVersion} is older than installed version {currentVersion}";
+                    return false;
+                }
+
+                reason = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                reason = $"Could not read installer version: {ex.Message}";
+                return false;
+            }
+        }
+
+        static void SafeDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch (Exception ex)
+            {
+                Log.WarnFormat("Could not delete temp file '{0}': {1}", path, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Modal "Downloading update..." dialog with a progress bar. No buttons, no close
+        /// box — runs to completion driven by the WebClient events on the UI thread.
+        /// </summary>
+        sealed class UpdateDownloadDialog : Form
+        {
+            readonly ProgressBar _bar;
+
+            public UpdateDownloadDialog()
+            {
+                Text = "Downloading update";
+                FormBorderStyle = FormBorderStyle.FixedDialog;
+                StartPosition = FormStartPosition.CenterParent;
+                ControlBox = false;
+                MinimizeBox = false;
+                MaximizeBox = false;
+                ShowInTaskbar = false;
+                ClientSize = new Size(380, 90);
+
+                var label = new Label
+                {
+                    Text = "Downloading update... This may take a moment.",
+                    AutoSize = false,
+                    Size = new Size(340, 20),
+                    Location = new Point(20, 18),
+                    Font = new Font("Segoe UI", 9.5f)
+                };
+
+                _bar = new ProgressBar
+                {
+                    Location = new Point(20, 48),
+                    Size = new Size(340, 20),
+                    Minimum = 0,
+                    Maximum = 100,
+                    Style = ProgressBarStyle.Continuous
+                };
+
+                Controls.Add(label);
+                Controls.Add(_bar);
+            }
+
+            public void SetProgress(int percentage)
+            {
+                if (percentage < 0) percentage = 0;
+                if (percentage > 100) percentage = 100;
+                _bar.Value = percentage;
+            }
+
+            public void MarkDone()
+            {
+                _bar.Value = 100;
+                Close();
             }
         }
 

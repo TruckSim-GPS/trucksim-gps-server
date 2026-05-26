@@ -119,6 +119,7 @@
     <Compile Include="Helpers\KeyboardHelper.cs" />
     <Compile Include="Helpers\ProcessHelper.cs" />
     <Compile Include="Helpers\Settings.cs" />
+    <Compile Include="Helpers\SignatureVerifier.cs" />
     <Compile Include="Helpers\Win32Uac.cs" />
     <Compile Include="Helpers\NetworkHelper.cs" />
     <Compile Include="SetupForm.cs">
