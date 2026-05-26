@@ -1,22 +1,45 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System;
+using System.Configuration;
+using System.IO;
 using System.Text;
-using System.Web.Http;
+using Funbit.Ets.Telemetry.Server.Data;
 using Funbit.Ets.Telemetry.Server.Helpers;
+using Newtonsoft.Json;
 
 namespace Funbit.Ets.Telemetry.Server.Controllers
 {
-    [RoutePrefix("")]
-    public class Ets2AppController : ApiController
+    /// <summary>
+    /// Endpoint helpers consumed by <see cref="MinimalHttpServer"/>.
+    /// Kept as static methods after the OWIN/SignalR/WebApi stack was removed.
+    /// </summary>
+    public static class TelemetryEndpoints
     {
         public const string TelemetryAppUriPath = "/";
+        public const string TelemetryApiUriPath = "/api/ets2/telemetry";
 
-        // Template for the status page HTML
-        // {VERSION} will be replaced with actual version
-        // {BYPASS_NOTICE} will be replaced with bypass mode notice (or empty string)
-        public const string StatusPageHtmlTemplate = @"<!DOCTYPE html>
+        const string TestTelemetryJsonFileName = "Ets2TestTelemetry.json";
+
+        static readonly bool UseTestTelemetryData = Convert.ToBoolean(
+            ConfigurationManager.AppSettings["UseEts2TestTelemetryData"]);
+
+        public static string GetEts2TelemetryJson()
+        {
+            if (UseTestTelemetryData)
+            {
+                using (var file = File.Open(
+                        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, TestTelemetryJsonFileName),
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite))
+                using (var reader = new StreamReader(file, Encoding.UTF8))
+                    return reader.ReadToEnd();
+            }
+
+            var v1 = ScsTelemetryDataReader.Instance.Read();
+            return JsonConvert.SerializeObject(v1, JsonHelper.RestSettings);
+        }
+
+        const string StatusPageHtmlTemplate = @"<!DOCTYPE html>
 <html>
 <head>
     <meta charset=""utf-8"">
@@ -118,11 +141,6 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
 </body>
 </html>";
 
-        /// <summary>
-        /// Generates the status page HTML with optional bypass mode notice
-        /// </summary>
-        /// <param name="showBypassNotice">If true, shows the custom HTTP server notice</param>
-        /// <returns>Complete HTML page</returns>
         public static string GetStatusPageHtml(bool showBypassNotice = false)
         {
             string bypassNotice = showBypassNotice
@@ -132,17 +150,6 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
             return StatusPageHtmlTemplate
                 .Replace("{VERSION}", AssemblyHelper.Version)
                 .Replace("{BYPASS_NOTICE}", bypassNotice);
-        }
-
-        [HttpGet]
-        [Route("", Name = "GetRoot")]
-        public HttpResponseMessage GetRoot()
-        {
-            var html = GetStatusPageHtml(showBypassNotice: false); // OWIN mode, no bypass
-            var response = Request.CreateResponse(HttpStatusCode.OK);
-            response.Content = new StringContent(html, Encoding.UTF8, "text/html");
-            response.Headers.CacheControl = new CacheControlHeaderValue { NoCache = true };
-            return response;
         }
     }
 }

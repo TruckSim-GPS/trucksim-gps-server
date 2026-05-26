@@ -304,7 +304,7 @@ namespace Funbit.Ets.Telemetry.Server
         void interfaceDropDown_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedInterface = (NetworkInterfaceInfo) interfacesDropDown.SelectedItem;
-            appUrlLabel.Text = IpToEndpointUrl(selectedInterface.Ip) + Ets2AppController.TelemetryAppUriPath;
+            appUrlLabel.Text = IpToEndpointUrl(selectedInterface.Ip) + TelemetryEndpoints.TelemetryAppUriPath;
             ipAddressLabel.Text = selectedInterface.Ip;
             Settings.Instance.DefaultNetworkInterfaceId = selectedInterface.Id;
             Settings.Instance.Save();
@@ -315,7 +315,12 @@ namespace Funbit.Ets.Telemetry.Server
             try
             {
                 broadcastTimer.Enabled = false;
-                await _broadcastHttpClient.PostAsJsonAsync(BroadcastUrl, ScsTelemetryDataReader.Instance.Read());
+                var data = ScsTelemetryDataReader.Instance.Read();
+                var json = JsonConvert.SerializeObject(data);
+                using (var content = new StringContent(json, Utf8, "application/json"))
+                {
+                    await _broadcastHttpClient.PostAsync(BroadcastUrl, content);
+                }
             }
             catch (Exception ex)
             {

@@ -278,8 +278,8 @@ namespace Funbit.Ets.Telemetry.Server
                 };
             }
 
-            // Use the shared HTML template from Ets2AppController with bypass notice enabled
-            var html = Ets2AppController.GetStatusPageHtml(showBypassNotice: true);
+            // Use the shared HTML template with bypass notice enabled
+            var html = TelemetryEndpoints.GetStatusPageHtml(showBypassNotice: true);
 
             return new HttpResponse
             {
@@ -306,7 +306,7 @@ namespace Funbit.Ets.Telemetry.Server
 
             try
             {
-                var telemetryJson = Ets2TelemetryController.GetEts2TelemetryJson();
+                var telemetryJson = TelemetryEndpoints.GetEts2TelemetryJson();
 
                 return new HttpResponse
                 {
