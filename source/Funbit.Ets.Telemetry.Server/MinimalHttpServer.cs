@@ -314,8 +314,7 @@ namespace Funbit.Ets.Telemetry.Server
                     StatusText = "OK",
                     ContentType = "application/json; charset=utf-8",
                     Body = telemetryJson,
-                    CacheControl = "no-cache",
-                    EnableCors = true
+                    CacheControl = "no-cache"
                 };
             }
             catch (Exception ex)
@@ -356,13 +355,6 @@ namespace Funbit.Ets.Telemetry.Server
                 responseBuilder.AppendFormat("Cache-Control: {0}\r\n", response.CacheControl);
             }
 
-            if (response.EnableCors)
-            {
-                responseBuilder.Append("Access-Control-Allow-Origin: *\r\n");
-                responseBuilder.Append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
-                responseBuilder.Append("Access-Control-Allow-Headers: Content-Type\r\n");
-            }
-
             responseBuilder.Append("\r\n");
 
             var headerBytes = Encoding.UTF8.GetBytes(responseBuilder.ToString());
@@ -401,7 +393,6 @@ namespace Funbit.Ets.Telemetry.Server
             public string ContentType { get; set; }
             public string Body { get; set; }
             public string CacheControl { get; set; }
-            public bool EnableCors { get; set; }
         }
     }
 }
