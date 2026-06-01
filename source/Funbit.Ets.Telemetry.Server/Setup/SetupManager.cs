@@ -1,4 +1,6 @@
-﻿namespace Funbit.Ets.Telemetry.Server.Setup
+﻿using Funbit.Ets.Telemetry.Server.Helpers;
+
+namespace Funbit.Ets.Telemetry.Server.Setup
 {
     public static class SetupManager
     {
@@ -6,13 +8,24 @@
 
         static SetupManager()
         {
-            Steps = new ISetup[]
+            if (WineHelper.IsInWine())
             {
-                new VCRedistSetup(),
-                new PluginSetup(),
-                new FirewallSetup(),
-                new UrlReservationSetup()
-            };
+                Steps = new ISetup[]
+                {
+                    new VCRedistSetup(),
+                    new PluginSetup()
+                };
+            }
+            else
+            {
+                Steps = new ISetup[]
+                {
+                    new VCRedistSetup(),
+                    new PluginSetup(),
+                    new FirewallSetup(),
+                    new UrlReservationSetup()
+                };
+            }
         }
     }
 }
