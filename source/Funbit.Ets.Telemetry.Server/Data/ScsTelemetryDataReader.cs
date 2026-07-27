@@ -60,7 +60,11 @@ namespace Funbit.Ets.Telemetry.Server.Data
                     Trailers = trailers,
                     Job = job,
                     Navigation = nav,
-                    Gameplay = MapGameplay(scs)
+                    // Gameplay event flags are XOR toggles that persist in shared memory across
+                    // game sessions; until the plugin re-initializes (SdkActive) the memory is
+                    // stale previous-session data, and serving it fires phantom job-delivered
+                    // popups on clients. Only expose gameplay once the SDK is live.
+                    Gameplay = MapGameplay(scs?.SdkActive == true ? scs : null)
                 };
             }
         }
