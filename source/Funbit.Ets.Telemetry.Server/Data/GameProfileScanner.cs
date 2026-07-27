@@ -204,6 +204,14 @@ namespace Funbit.Ets.Telemetry.Server.Data
             }
 
             mod.Source = "local";
+            // The package name comes from the profile and ends up in a path, so it may
+            // only ever be a plain file name.
+            if (package.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                package == "." || package == "..")
+            {
+                return mod;
+            }
+
             string modRoot = Path.Combine(GetDocumentsRoot(game), "mod");
             string filePath = Path.Combine(modRoot, package + ".scs");
             if (File.Exists(filePath))
@@ -310,6 +318,10 @@ namespace Funbit.Ets.Telemetry.Server.Data
             }
         }
 
+        /// <summary>
+        /// Decodes a profile folder name, or returns null when it is not strictly a pair of
+        /// hex digits per byte. Callers rely on this to reject ids that could act as a path.
+        /// </summary>
         public static string TryDecodeHexName(string hex)
         {
             if (string.IsNullOrEmpty(hex) || hex.Length % 2 != 0)
@@ -317,11 +329,24 @@ namespace Funbit.Ets.Telemetry.Server.Data
             var bytes = new byte[hex.Length / 2];
             for (int i = 0; i < bytes.Length; i++)
             {
-                if (!byte.TryParse(hex.Substring(i * 2, 2),
-                        System.Globalization.NumberStyles.HexNumber, null, out bytes[i]))
+                int high = HexDigit(hex[i * 2]);
+                int low = HexDigit(hex[i * 2 + 1]);
+                if (high < 0 || low < 0)
                     return null;
+                bytes[i] = (byte)((high << 4) | low);
             }
             return Encoding.UTF8.GetString(bytes);
+        }
+
+        static int HexDigit(char c)
+        {
+            if (c >= '0' && c <= '9')
+                return c - '0';
+            if (c >= 'a' && c <= 'f')
+                return c - 'a' + 10;
+            if (c >= 'A' && c <= 'F')
+                return c - 'A' + 10;
+            return -1;
         }
 
         public static string EncodeHexName(string name)

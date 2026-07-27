@@ -178,7 +178,22 @@ namespace Funbit.Ets.Telemetry.Server
                                     h.StartsWith("Connection:", StringComparison.OrdinalIgnoreCase) &&
                                     h.IndexOf("close", StringComparison.OrdinalIgnoreCase) >= 0);
 
-                            var response = RouteRequest(request);
+                            HttpResponse response;
+                            try
+                            {
+                                response = RouteRequest(request);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Error routing request", ex);
+                                response = new HttpResponse
+                                {
+                                    StatusCode = 500,
+                                    StatusText = "Internal Server Error",
+                                    ContentType = "text/plain",
+                                    Body = "Internal Server Error"
+                                };
+                            }
                             await SendHttpResponseAsync(stream, response, closeConnection: clientWantsClose);
 
                             if (clientWantsClose)
@@ -354,6 +369,23 @@ namespace Funbit.Ets.Telemetry.Server
             }
         }
 
+        private static bool IsAddressedByIp(HttpRequest request)
+        {
+            var header = request.Headers?.FirstOrDefault(
+                h => h.StartsWith("Host:", StringComparison.OrdinalIgnoreCase));
+            if (header == null)
+                return false;
+
+            var host = header.Substring("Host:".Length).Trim();
+            int portSeparator = host.LastIndexOf(':');
+            if (portSeparator > 0 && host.IndexOf(']') < portSeparator)
+                host = host.Substring(0, portSeparator);
+            host = host.Trim('[', ']');
+
+            IPAddress address;
+            return host == "localhost" || IPAddress.TryParse(host, out address);
+        }
+
         private HttpResponse HandleGameProfileRequest(HttpRequest request, string path, Dictionary<string, string> query)
         {
             if (request.Method != "GET")
@@ -364,6 +396,19 @@ namespace Funbit.Ets.Telemetry.Server
                     StatusText = "Method Not Allowed",
                     ContentType = "text/plain",
                     Body = "Method Not Allowed"
+                };
+            }
+
+            // Profile data is more identifying than telemetry, so only accept requests
+            // addressed by address: a browser doing DNS rebinding sends its own hostname.
+            if (!IsAddressedByIp(request))
+            {
+                return new HttpResponse
+                {
+                    StatusCode = 403,
+                    StatusText = "Forbidden",
+                    ContentType = "text/plain",
+                    Body = "Forbidden"
                 };
             }
 

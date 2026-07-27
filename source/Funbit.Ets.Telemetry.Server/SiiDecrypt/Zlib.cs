@@ -9,6 +9,10 @@ namespace SIIDecryptSharp
     {
         public static int uncompress(byte[] destBuffer, ref uint destLen, byte[] sourceBuffer, uint sourceLen)
         {
+            destLen = 0;
+            if (sourceLen < 2)
+                return -1;
+
             // Skip the 2-byte zlib stream header; DeflateStream handles the raw deflate data.
             using (var input = new MemoryStream(sourceBuffer, 2, (int)sourceLen - 2))
             using (var deflate = new DeflateStream(input, CompressionMode.Decompress))
@@ -21,7 +25,9 @@ namespace SIIDecryptSharp
                     total += read;
                 }
                 destLen = (uint)total;
-                return 0;
+                // DeflateStream stops silently on a truncated stream, which would otherwise
+                // leave the rest of the buffer zeroed and pass as valid data.
+                return total == destBuffer.Length ? 0 : -1;
             }
         }
     }

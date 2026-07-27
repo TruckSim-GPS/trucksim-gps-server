@@ -23,6 +23,10 @@ namespace Funbit.Ets.Telemetry.Server.Data
     {
         const int PollIntervalMs = 250;
 
+        // Modded games can produce very large logs, so catch up in bounded chunks
+        // instead of reading everything the log grew by in one allocation.
+        const int MaxReadChunkBytes = 1024 * 1024;
+
         class State
         {
             public long LastLength;
@@ -112,11 +116,11 @@ namespace Funbit.Ets.Telemetry.Server.Data
                         state.Revision++;
                     }
                 }
-                if (length == state.LastLength)
+                if (length <= state.LastLength)
                     return;
 
                 stream.Seek(state.LastLength, SeekOrigin.Begin);
-                var buffer = new byte[length - state.LastLength];
+                var buffer = new byte[Math.Min(length - state.LastLength, MaxReadChunkBytes)];
                 int read = stream.Read(buffer, 0, buffer.Length);
                 string chunk = state.Remainder + Encoding.UTF8.GetString(buffer, 0, read);
 

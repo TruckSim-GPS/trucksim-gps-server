@@ -30,6 +30,12 @@ namespace SIIDecryptSharp
     }
     public class Decryptor
     {
+        // The file carries an HMAC but the key is public, so the header cannot be trusted:
+        // sanity-check the claimed size before allocating for it. 1032:1 is the maximum
+        // deflate ratio, so anything above that cannot come from the payload we hold.
+        const uint MaxDecodedSize = 64 * 1024 * 1024;
+        const uint MaxDeflateRatio = 1032;
+
         public static byte[] SII_Key = new byte[]
         {
             0x2a, 0x5f, 0xcb, 0x17, 0x91, 0xd2, 0x2f, 0xb6, 0x02, 0x45, 0xb3, 0xd8, 0x36, 0x9e, 0xd0, 0xb2,
@@ -51,9 +57,17 @@ namespace SIIDecryptSharp
             {
                 var data = Decrypt(ref bytes, streamPos);
                 bytes = data.Data;
+                if (data.Header.DataSize > MaxDecodedSize ||
+                    data.Header.DataSize > (ulong)data.Data.Length * MaxDeflateRatio)
+                {
+                    throw new InvalidDataException("Implausible SII data size");
+                }
                 byte[] destination = new byte[data.Header.DataSize];
                 uint dataSize = (uint)data.Header.DataSize;
-                Zlib.uncompress(destination, ref dataSize, data.Data, (uint)data.Data.Length);
+                if (Zlib.uncompress(destination, ref dataSize, data.Data, (uint)data.Data.Length) != 0)
+                {
+                    throw new InvalidDataException("Truncated or invalid zlib stream");
+                }
                 data.Data = destination;
                 bytes = destination;
                 data = new SII_Data();
