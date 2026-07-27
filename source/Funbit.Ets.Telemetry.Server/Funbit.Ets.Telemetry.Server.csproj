@@ -108,9 +108,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\TelemetryEndpoints.cs" />
+    <Compile Include="Controllers\GameProfileEndpoints.cs" />
     <!-- New SCS SDK reader + V1 models -->
     <Compile Include="Data\ScsTelemetryDataReader.cs" />
     <Compile Include="Data\TelemetryV1.cs" />
+    <Compile Include="Data\GameLogWatcher.cs" />
+    <Compile Include="Data\GameProfileScanner.cs" />
     <!-- Vendored SIIDecryptSharp (see SiiDecrypt\LICENSE) -->
     <Compile Include="SiiDecrypt\BSII_Decoder.cs" />
     <Compile Include="SiiDecrypt\BSII_Serializer.cs" />

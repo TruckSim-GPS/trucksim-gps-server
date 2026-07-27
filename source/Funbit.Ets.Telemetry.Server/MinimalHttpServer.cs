@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Funbit.Ets.Telemetry.Server.Controllers;
+using Funbit.Ets.Telemetry.Server.Data;
 
 namespace Funbit.Ets.Telemetry.Server
 {
@@ -65,6 +67,9 @@ namespace Funbit.Ets.Telemetry.Server
                     Log.Info("  - GET  /              (Status page)");
                     Log.Info("  - GET  /api/ets2/telemetry  (Telemetry JSON)");
                     Log.Info("  - POST /api/ets2/telemetry  (Telemetry JSON)");
+                    Log.Info("  - GET  /api/game/state        (Active profile state)");
+                    Log.Info("  - GET  /api/game/profiles     (Game profile list)");
+                    Log.Info("  - GET  /api/game/profile-mods (Profile mod list)");
                 }
                 catch (Exception ex)
                 {
@@ -239,8 +244,22 @@ namespace Funbit.Ets.Telemetry.Server
         {
             Log.DebugFormat("Request: {0} {1}", request.Method, request.Path);
 
-            // Normalize path
-            var path = request.Path.TrimEnd('/');
+            // Normalize path and split off the query string
+            var path = request.Path;
+            var query = new Dictionary<string, string>();
+            int queryIndex = path.IndexOf('?');
+            if (queryIndex >= 0)
+            {
+                foreach (var pair in path.Substring(queryIndex + 1).Split('&'))
+                {
+                    int eq = pair.IndexOf('=');
+                    if (eq > 0)
+                        query[Uri.UnescapeDataString(pair.Substring(0, eq))] =
+                            Uri.UnescapeDataString(pair.Substring(eq + 1));
+                }
+                path = path.Substring(0, queryIndex);
+            }
+            path = path.TrimEnd('/');
             if (string.IsNullOrEmpty(path))
                 path = "/";
 
@@ -252,6 +271,10 @@ namespace Funbit.Ets.Telemetry.Server
             else if (path == "/api/ets2/telemetry")
             {
                 return HandleTelemetryRequest(request);
+            }
+            else if (path == "/api/game/state" || path == "/api/game/profiles" || path == "/api/game/profile-mods")
+            {
+                return HandleGameProfileRequest(request, path, query);
             }
             else
             {
@@ -320,6 +343,86 @@ namespace Funbit.Ets.Telemetry.Server
             catch (Exception ex)
             {
                 Log.Error("Error getting telemetry data", ex);
+
+                return new HttpResponse
+                {
+                    StatusCode = 500,
+                    StatusText = "Internal Server Error",
+                    ContentType = "text/plain",
+                    Body = "Internal Server Error"
+                };
+            }
+        }
+
+        private HttpResponse HandleGameProfileRequest(HttpRequest request, string path, Dictionary<string, string> query)
+        {
+            if (request.Method != "GET")
+            {
+                return new HttpResponse
+                {
+                    StatusCode = 405,
+                    StatusText = "Method Not Allowed",
+                    ContentType = "text/plain",
+                    Body = "Method Not Allowed"
+                };
+            }
+
+            string game;
+            query.TryGetValue("game", out game);
+            if (!GameProfileEndpoints.IsValidGame(game))
+            {
+                return new HttpResponse
+                {
+                    StatusCode = 400,
+                    StatusText = "Bad Request",
+                    ContentType = "text/plain",
+                    Body = "Missing or invalid 'game' parameter (expected ets2 or ats)"
+                };
+            }
+
+            try
+            {
+                string json;
+                if (path == "/api/game/state")
+                {
+                    json = GameProfileEndpoints.GetStateJson(game);
+                }
+                else if (path == "/api/game/profiles")
+                {
+                    json = GameProfileEndpoints.GetProfilesJson(game);
+                }
+                else
+                {
+                    string id, type;
+                    query.TryGetValue("id", out id);
+                    query.TryGetValue("type", out type);
+                    // The id must be a hex-encoded profile name; anything else could act as a path fragment.
+                    if (string.IsNullOrEmpty(id) || GameProfileScanner.TryDecodeHexName(id) == null ||
+                        (type != "local" && type != "steam"))
+                    {
+                        return new HttpResponse
+                        {
+                            StatusCode = 400,
+                            StatusText = "Bad Request",
+                            ContentType = "text/plain",
+                            Body = "Missing or invalid 'id'/'type' parameters"
+                        };
+                    }
+                    json = GameProfileEndpoints.GetProfileModsJson(game, id, type);
+                }
+
+                return new HttpResponse
+                {
+                    StatusCode = 200,
+                    StatusText = "OK",
+                    ContentType = "application/json; charset=utf-8",
+                    Body = json,
+                    CacheControl = "no-cache"
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error handling game profile request", ex);
 
                 return new HttpResponse
                 {
