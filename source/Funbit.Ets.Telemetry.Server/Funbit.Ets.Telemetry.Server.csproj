@@ -111,6 +111,14 @@
     <!-- New SCS SDK reader + V1 models -->
     <Compile Include="Data\ScsTelemetryDataReader.cs" />
     <Compile Include="Data\TelemetryV1.cs" />
+    <!-- Vendored SIIDecryptSharp (see SiiDecrypt\LICENSE) -->
+    <Compile Include="SiiDecrypt\BSII_Decoder.cs" />
+    <Compile Include="SiiDecrypt\BSII_Serializer.cs" />
+    <Compile Include="SiiDecrypt\DecoderUtils.cs" />
+    <Compile Include="SiiDecrypt\Decryptor.cs" />
+    <Compile Include="SiiDecrypt\FileType.cs" />
+    <Compile Include="SiiDecrypt\StreamUtils.cs" />
+    <Compile Include="SiiDecrypt\Zlib.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\Ets2ProcessHelper.cs" />
     <!-- Legacy Funbit reader removed (migrated to SCSSdk) -->
@@ -150,6 +158,7 @@
     <Content Include="Ets2TestTelemetry.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="SiiDecrypt\LICENSE" />
     <None Include="Resources\app_icon.ico" />
     <None Include="Resources\check-error.png" />
     <None Include="Resources\check-on.png" />
