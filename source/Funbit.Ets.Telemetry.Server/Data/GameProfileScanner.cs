@@ -191,7 +191,10 @@ namespace Funbit.Ets.Telemetry.Server.Data
             var mod = new GameProfileMod
             {
                 Package = package,
-                DisplayName = string.IsNullOrEmpty(displayName) ? package : displayName
+                // Verbatim from profile.sii; empty when the profile stores no display
+                // name. The app must know the difference: fabricated names would feed
+                // its name-based mod matching.
+                DisplayName = displayName
             };
 
             var workshopMatch = WorkshopPackageRegex.Match(package);
