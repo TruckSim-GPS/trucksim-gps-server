@@ -160,10 +160,13 @@ namespace Funbit.Ets.Telemetry.Server.Data
             if (mapPathMatch.Success)
                 result.MapPath = mapPathMatch.Groups[1].Value;
 
-            foreach (Match match in modMatches)
+            // profile.sii stores active_mods[] bottom-up: index 0 is the BOTTOM of the
+            // in-game Mod Manager, the last entry its top = highest priority. Serve
+            // top-first so the wire order is the priority order consumers act on.
+            for (int i = modMatches.Count - 1; i >= 0; i--)
             {
-                string package = match.Groups[1].Value;
-                string displayName = match.Groups[2].Value;
+                string package = modMatches[i].Groups[1].Value;
+                string displayName = modMatches[i].Groups[2].Value;
                 result.Mods.Add(DescribeMod(game, package, displayName));
             }
 
