@@ -171,15 +171,15 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
             var mapPathMatch = MapPathRegex.Match(text);
             if (mapPathMatch.Success)
-                result.MapPath = mapPathMatch.Groups[1].Value;
+                result.MapPath = DecodeSiiEscapes(mapPathMatch.Groups[1].Value);
 
             // profile.sii stores active_mods[] bottom-up: index 0 is the BOTTOM of the
             // in-game Mod Manager, the last entry its top = highest priority. Serve
             // top-first so the wire order is the priority order consumers act on.
             for (int i = modMatches.Count - 1; i >= 0; i--)
             {
-                string package = modMatches[i].Groups[1].Value;
-                string displayName = modMatches[i].Groups[2].Value;
+                string package = DecodeSiiEscapes(modMatches[i].Groups[1].Value);
+                string displayName = DecodeSiiEscapes(modMatches[i].Groups[2].Value);
                 result.Mods.Add(DescribeMod(game, package, displayName));
             }
 
@@ -362,6 +362,33 @@ namespace Funbit.Ets.Telemetry.Server.Data
                     throw new EndOfStreamException();
                 total += read;
             }
+        }
+
+        // profile.sii escapes non-ASCII as \xNN per UTF-8 byte: "ME Paran\xc3\xa1" is the file
+        // "ME Paraná.scs". Runs before DescribeMod's guard, so escaped separators are still caught.
+        static string DecodeSiiEscapes(string value)
+        {
+            if (value.IndexOf("\\x", StringComparison.Ordinal) < 0)
+                return value;
+
+            var source = Encoding.UTF8.GetBytes(value);
+            var bytes = new List<byte>(source.Length);
+            for (int i = 0; i < source.Length; i++)
+            {
+                if (source[i] == '\\' && i + 3 < source.Length && source[i + 1] == 'x')
+                {
+                    int high = HexDigit((char)source[i + 2]);
+                    int low = HexDigit((char)source[i + 3]);
+                    if (high >= 0 && low >= 0)
+                    {
+                        bytes.Add((byte)((high << 4) | low));
+                        i += 3;
+                        continue;
+                    }
+                }
+                bytes.Add(source[i]);
+            }
+            return Encoding.UTF8.GetString(bytes.ToArray());
         }
 
         /// <summary>
