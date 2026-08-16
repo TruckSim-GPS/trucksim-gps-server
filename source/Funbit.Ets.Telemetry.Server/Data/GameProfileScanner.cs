@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -46,6 +47,9 @@ namespace Funbit.Ets.Telemetry.Server.Data
     /// </summary>
     public static class GameProfileScanner
     {
+        static readonly log4net.ILog Log = log4net.LogManager.GetLogger(
+            MethodBase.GetCurrentMethod().DeclaringType);
+
         static readonly ConcurrentDictionary<string, Tuple<long, DateTime, string>> FingerprintCache =
             new ConcurrentDictionary<string, Tuple<long, DateTime, string>>();
 
@@ -100,10 +104,14 @@ namespace Funbit.Ets.Telemetry.Server.Data
             string localRoot = Path.Combine(GetDocumentsRoot(game), "profiles");
             if (Directory.Exists(localRoot))
                 AddProfiles(result, localRoot, "local");
+            int localCount = result.Count;
 
             foreach (var steamRoot in GetSteamProfileRoots(game))
                 AddProfiles(result, steamRoot, "steam");
 
+            Log.InfoFormat("[{0}] Profiles found: {1} local, {2} steam (documents: {3}; steam: {4})",
+                game, localCount, result.Count - localCount, GetDocumentsRoot(game),
+                GetSteamRoot() ?? "not found");
             return result;
         }
 
@@ -134,6 +142,8 @@ namespace Funbit.Ets.Telemetry.Server.Data
             string profilePath = ResolveProfileSiiPath(game, id, type);
             if (profilePath == null)
             {
+                Log.WarnFormat("[{0}] profile.sii not found for {1} profile '{2}' (id {3})",
+                    game, type, result.Name, id);
                 result.Error = "profile_sii_missing";
                 return result;
             }
@@ -143,8 +153,9 @@ namespace Funbit.Ets.Telemetry.Server.Data
             {
                 text = Encoding.UTF8.GetString(Decryptor.Decrypt(profilePath));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Log.Warn($"[{game}] Could not decrypt '{profilePath}'", ex);
                 result.Error = "decrypt_failed";
                 return result;
             }
@@ -152,6 +163,8 @@ namespace Funbit.Ets.Telemetry.Server.Data
             var modMatches = ActiveModRegex.Matches(text);
             if (modMatches.Count == 0 && !text.Contains("active_mods"))
             {
+                Log.WarnFormat("[{0}] No active_mods in '{1}' ({2} chars decoded); profile format " +
+                               "may have changed", game, profilePath, text.Length);
                 result.Error = "parse_failed";
                 return result;
             }
@@ -170,7 +183,25 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 result.Mods.Add(DescribeMod(game, package, displayName));
             }
 
+            LogModInventory(game, result);
             return result;
+        }
+
+        static void LogModInventory(string game, GameProfileMods result)
+        {
+            Log.InfoFormat("[{0}] Profile '{1}' ({2}): {3} mods, {4} missing, {5} fingerprinted, map_path '{6}'",
+                game, result.Name, result.Type, result.Mods.Count,
+                result.Mods.Count(m => !m.FileFound), result.Mods.Count(m => m.Fingerprint != null),
+                result.MapPath ?? "");
+
+            for (int i = 0; i < result.Mods.Count; i++)
+            {
+                var mod = result.Mods[i];
+                Log.InfoFormat("  {0,2}. {1,-40} {2,-8} {3,-7} {4,10} {5}", i + 1, mod.Package,
+                    mod.Source, mod.FileFound ? "found" : "MISSING",
+                    mod.FileSize.HasValue ? $"{mod.FileSize.Value / 1048576.0:F1} MB" : "-",
+                    mod.Fingerprint == null ? "-" : mod.Fingerprint.Substring(0, 8));
+            }
         }
 
         static string ResolveProfileSiiPath(string game, string id, string type)
@@ -223,9 +254,17 @@ namespace Funbit.Ets.Telemetry.Server.Data
             if (File.Exists(filePath))
             {
                 mod.FileFound = true;
-                long fileSize;
-                mod.Fingerprint = GetFingerprint(filePath, out fileSize);
-                mod.FileSize = fileSize;
+                try
+                {
+                    long fileSize;
+                    mod.Fingerprint = GetFingerprint(filePath, out fileSize);
+                    mod.FileSize = fileSize;
+                }
+                catch (Exception ex)
+                {
+                    // A file the game is holding must not fail the whole mod list.
+                    Log.Warn($"[{game}] Could not fingerprint '{filePath}'", ex);
+                }
             }
             else if (Directory.Exists(Path.Combine(modRoot, package)))
             {
@@ -262,8 +301,9 @@ namespace Funbit.Ets.Telemetry.Server.Data
             {
                 vdf = File.ReadAllText(vdfPath);
             }
-            catch (IOException)
+            catch (IOException ex)
             {
+                Log.WarnFormat("Could not read Steam library list '{0}': {1}", vdfPath, ex.Message);
                 yield break;
             }
             foreach (Match match in Regex.Matches(vdf, "\"path\"\\s+\"([^\"]+)\""))
