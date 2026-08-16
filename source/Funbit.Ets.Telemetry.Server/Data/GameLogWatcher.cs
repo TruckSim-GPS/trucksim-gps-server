@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using Funbit.Ets.Telemetry.Server.Helpers;
 
 namespace Funbit.Ets.Telemetry.Server.Data
 {
@@ -14,10 +15,11 @@ namespace Funbit.Ets.Telemetry.Server.Data
     }
 
     /// <summary>
-    /// Tails the game's game.log.txt to track the active profile. The game writes the log
-    /// continuously and re-emits "New profile selected" both at startup and whenever the
+    /// Tails the running game's game.log.txt to track the active profile. The game writes the
+    /// log continuously and re-emits "New profile selected" both at startup and whenever the
     /// profile or its mod configuration changes, so the log is the single change signal.
-    /// Each change bumps a revision counter that clients poll for.
+    /// Each change bumps a revision counter that clients poll for; the first catch-up reports
+    /// one change, not the whole session.
     /// </summary>
     public static class GameLogWatcher
     {
@@ -34,6 +36,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
             public int Revision;
             public string ProfileName;
             public string ProfileType;
+            public bool Primed;
         }
 
         static readonly object Lock = new object();
@@ -72,21 +75,47 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
         static void PollLoop()
         {
+            string watched = null;
             while (true)
             {
-                foreach (var game in States.Keys)
+                try
                 {
-                    try
+                    string game = RunningGame();
+                    if (game != watched)
                     {
-                        Poll(game);
+                        watched = game;
+                        if (game != null)
+                            Reset(States[game]);
                     }
-                    catch (Exception)
-                    {
-                        // Transient share violations are expected while the game replaces the log;
-                        // nothing here may ever take down the server process.
-                    }
+                    if (watched != null)
+                        Poll(watched);
+                }
+                catch (Exception)
+                {
+                    // Transient share violations are expected while the game replaces the log;
+                    // nothing here may ever take down the server process.
                 }
                 Thread.Sleep(PollIntervalMs);
+            }
+        }
+
+        static string RunningGame()
+        {
+            if (!Ets2ProcessHelper.IsEts2Running)
+                return null;
+            return string.Equals(Ets2ProcessHelper.LastRunningGameName, "ATS",
+                StringComparison.OrdinalIgnoreCase) ? "ats" : "ets2";
+        }
+
+        static void Reset(State state)
+        {
+            lock (Lock)
+            {
+                state.LastLength = 0;
+                state.Remainder = "";
+                state.ProfileName = null;
+                state.ProfileType = null;
+                state.Primed = false;
             }
         }
 
@@ -107,14 +136,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 if (length < state.LastLength)
                 {
                     // Truncated: the game started a new session and rewrote the log.
-                    lock (Lock)
-                    {
-                        state.LastLength = 0;
-                        state.Remainder = "";
-                        state.ProfileName = null;
-                        state.ProfileType = null;
-                        state.Revision++;
-                    }
+                    Reset(state);
                 }
                 if (length <= state.LastLength)
                     return;
@@ -127,15 +149,21 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 var lines = chunk.Split('\n');
                 lock (Lock)
                 {
+                    bool priming = !state.Primed;
                     for (int i = 0; i < lines.Length - 1; i++)
-                        ParseLine(state, lines[i].TrimEnd('\r'));
+                        ParseLine(state, lines[i].TrimEnd('\r'), priming);
                     state.Remainder = lines[lines.Length - 1];
                     state.LastLength += read;
+                    if (priming && state.LastLength >= length)
+                    {
+                        state.Primed = true;
+                        state.Revision++;
+                    }
                 }
             }
         }
 
-        static void ParseLine(State state, string line)
+        static void ParseLine(State state, string line, bool priming)
         {
             string name = ExtractQuoted(line, "Set profile finished: '");
             if (name != null)
@@ -156,11 +184,12 @@ namespace Funbit.Ets.Telemetry.Server.Data
             if (name != null)
             {
                 state.ProfileName = name;
-                state.Revision++;
+                if (!priming)
+                    state.Revision++;
                 return;
             }
 
-            if (line.EndsWith("Current profile saved.", StringComparison.Ordinal))
+            if (!priming && line.EndsWith("Current profile saved.", StringComparison.Ordinal))
                 state.Revision++;
         }
 
