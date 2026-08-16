@@ -63,6 +63,7 @@
             this.websiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.donateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openLogFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -352,7 +353,7 @@
             //
             // helpToolStripMenu
             // 
-            this.helpToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.websiteToolStripMenuItem, this.helpToolStripMenuItem, this.donateToolStripMenuItem, this.toolStripSeparator2, this.checkForUpdatesToolStripMenuItem, this.aboutToolStripMenuItem });
+            this.helpToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { this.websiteToolStripMenuItem, this.helpToolStripMenuItem, this.donateToolStripMenuItem, this.openLogFolderToolStripMenuItem, this.toolStripSeparator2, this.checkForUpdatesToolStripMenuItem, this.aboutToolStripMenuItem });
             this.helpToolStripMenu.Name = "helpToolStripMenu";
             this.helpToolStripMenu.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenu.Text = "Help";
@@ -377,6 +378,13 @@
             this.donateToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.donateToolStripMenuItem.Text = "Get support on Discord";
             this.donateToolStripMenuItem.Click += new System.EventHandler(this.donateToolStripMenuItem_Click);
+            //
+            // openLogFolderToolStripMenuItem
+            //
+            this.openLogFolderToolStripMenuItem.Name = "openLogFolderToolStripMenuItem";
+            this.openLogFolderToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.openLogFolderToolStripMenuItem.Text = "Open log folder";
+            this.openLogFolderToolStripMenuItem.Click += new System.EventHandler(this.openLogFolderToolStripMenuItem_Click);
             //
             // toolStripSeparator2
             //
@@ -496,6 +504,7 @@
         private System.Windows.Forms.ToolStripMenuItem websiteToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem donateToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openLogFolderToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;

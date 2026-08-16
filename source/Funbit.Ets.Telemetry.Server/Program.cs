@@ -10,6 +10,9 @@ namespace Funbit.Ets.Telemetry.Server
 {
     static class Program
     {
+        static readonly log4net.ILog Log = log4net.LogManager.GetLogger(
+            System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         [DllImport("kernel32.dll", EntryPoint = "CreateMutexA")]
         private static extern int CreateMutex(int lpMutexAttributes, int bInitialOwner, string lpName);
         [DllImport("kernel32.dll")]
@@ -65,6 +68,11 @@ namespace Funbit.Ets.Telemetry.Server
             }
 
             log4net.Config.XmlConfigurator.Configure();
+
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                Log.Fatal("Unhandled exception", e.ExceptionObject as Exception);
+            Application.ThreadException += (s, e) =>
+                Log.Fatal("Unhandled UI exception", e.Exception);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

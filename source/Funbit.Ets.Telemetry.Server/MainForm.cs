@@ -175,7 +175,8 @@ namespace Funbit.Ets.Telemetry.Server
         void MainForm_Load(object sender, EventArgs e)
         {
             // log current version for debugging
-            Log.InfoFormat("Running application on {0} ({1}) {2}", Environment.OSVersion,
+            Log.InfoFormat("Running version {0} on {1} ({2}) {3}", AssemblyHelper.Version,
+                Environment.OSVersion,
                 Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit",
                 Program.UninstallMode ? "[UNINSTALL MODE]" : "");
             Text += @" " + AssemblyHelper.Version;
@@ -345,6 +346,15 @@ namespace Funbit.Ets.Telemetry.Server
         void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ProcessHelper.OpenUrl("https://github.com/TruckSim-GPS/trucksim-gps-server");
+        }
+
+        void openLogFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string logFile = log4net.LogManager.GetRepository().GetAppenders()
+                .OfType<log4net.Appender.FileAppender>().First().File;
+            Process.Start("explorer.exe", File.Exists(logFile)
+                ? $"/select,\"{logFile}\""
+                : $"\"{Path.GetDirectoryName(logFile)}\"");
         }
 
         void aboutToolStripMenuItem_Click(object sender, EventArgs e)

@@ -58,6 +58,7 @@ Filename: "netsh"; Parameters: "http delete urlacl url=http://+:31377/"; Flags: 
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\dev"
 Type: filesandordirs; Name: "{app}\docs"
+Type: filesandordirs; Name: "{localappdata}\TruckSim GPS\logs"
 
 [Code]
 function IsSilentInstall: Boolean;
