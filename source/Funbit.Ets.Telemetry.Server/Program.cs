@@ -71,8 +71,14 @@ namespace Funbit.Ets.Telemetry.Server
 
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
                 Log.Fatal("Unhandled exception", e.ExceptionObject as Exception);
+            // Subscribing suppresses the built-in dialog, so show the same one after logging.
             Application.ThreadException += (s, e) =>
+            {
                 Log.Fatal("Unhandled UI exception", e.Exception);
+                using (var dialog = new ThreadExceptionDialog(e.Exception))
+                    if (dialog.ShowDialog() == DialogResult.Abort)
+                        Application.Exit();
+            };
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
