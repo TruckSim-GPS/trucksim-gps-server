@@ -13,6 +13,10 @@ namespace Funbit.Ets.Telemetry.Server.Data
         public int Revision { get; set; }
         public string ActiveProfileName { get; set; }
         public string ActiveProfileType { get; set; }
+        // Gameplay session state ("[bullet] Starting/Stopping server" markers).
+        // SessionRevision stays 0 until primed; clients ignore InGameplay then.
+        public int SessionRevision { get; set; }
+        public bool InGameplay { get; set; }
     }
 
     /// <summary>
@@ -40,6 +44,8 @@ namespace Funbit.Ets.Telemetry.Server.Data
             public int Revision;
             public string ProfileName;
             public string ProfileType;
+            public int SessionRevision;
+            public bool InGameplay;
             public bool Primed;
         }
 
@@ -91,6 +97,8 @@ namespace Funbit.Ets.Telemetry.Server.Data
                     Revision = state.Revision,
                     ActiveProfileName = state.ProfileName,
                     ActiveProfileType = state.ProfileType,
+                    SessionRevision = state.SessionRevision,
+                    InGameplay = state.InGameplay,
                 };
             }
         }
@@ -164,6 +172,8 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 state.Remainder = "";
                 state.ProfileName = null;
                 state.ProfileType = null;
+                state.SessionRevision = 0;
+                state.InGameplay = false;
                 state.Primed = false;
             }
         }
@@ -222,6 +232,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
                     {
                         state.Primed = true;
                         state.Revision++;
+                        state.SessionRevision++; // non-zero = session state now known
                         primedWithoutProfile = state.ProfileName == null;
                         if (!primedWithoutProfile)
                             changes.Add(string.Format(
@@ -239,6 +250,32 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
         static void ParseLine(State state, string line, bool priming, List<string> changes)
         {
+            // Session boundaries: the bullet lines bracket every driving session and
+            // never fire mid-session. (Not the bare "exit" line — that also appears
+            // during startup config execution.)
+            if (line.EndsWith("[bullet] Starting server", StringComparison.Ordinal))
+            {
+                state.InGameplay = true;
+                if (!priming)
+                {
+                    state.SessionRevision++;
+                    changes.Add(string.Format("Gameplay session started, session revision {0}",
+                        state.SessionRevision));
+                }
+                return;
+            }
+            if (line.EndsWith("[bullet] Stopping server", StringComparison.Ordinal))
+            {
+                state.InGameplay = false;
+                if (!priming)
+                {
+                    state.SessionRevision++;
+                    changes.Add(string.Format("Gameplay session ended (main menu), session revision {0}",
+                        state.SessionRevision));
+                }
+                return;
+            }
+
             string name = ExtractQuoted(line, "Set profile finished: '");
             if (name != null)
             {
