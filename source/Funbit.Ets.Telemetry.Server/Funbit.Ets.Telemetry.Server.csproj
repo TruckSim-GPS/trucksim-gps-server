@@ -132,6 +132,7 @@
     <Compile Include="Helpers\Settings.cs" />
     <Compile Include="Helpers\SignatureVerifier.cs" />
     <Compile Include="Helpers\Win32Uac.cs" />
+    <Compile Include="Helpers\WineHelper.cs" />
     <Compile Include="Helpers\NetworkHelper.cs" />
     <Compile Include="SetupForm.cs">
       <SubType>Form</SubType>
