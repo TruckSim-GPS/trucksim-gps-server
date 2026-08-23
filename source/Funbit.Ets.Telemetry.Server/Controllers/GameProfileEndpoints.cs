@@ -39,9 +39,6 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
                 gameRunning,
                 game,
                 revision = state.Revision,
-                // gameRunning means process running; main menu = gameRunning && !inGameplay.
-                sessionRevision = state.SessionRevision,
-                inGameplay = state.InGameplay,
                 activeProfile,
             }, JsonHelper.RestSettings);
         }
