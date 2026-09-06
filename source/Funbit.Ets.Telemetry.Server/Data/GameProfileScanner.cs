@@ -53,7 +53,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
         static readonly ConcurrentDictionary<string, Tuple<long, DateTime, string>> FingerprintCache =
             new ConcurrentDictionary<string, Tuple<long, DateTime, string>>();
 
-        static readonly Regex ActiveModRegex = new Regex(
+        internal static readonly Regex ActiveModRegex = new Regex(
             "active_mods\\[\\d+\\]:\\s*\"([^|\"]*)\\|?([^\"]*)\"", RegexOptions.Compiled);
         static readonly Regex MapPathRegex = new Regex(
             "map_path:\\s*\"([^\"]*)\"", RegexOptions.Compiled);
@@ -81,7 +81,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
             }
         }
 
-        static IEnumerable<string> GetSteamProfileRoots(string game)
+        internal static IEnumerable<string> GetSteamProfileRoots(string game)
         {
             string steamRoot = GetSteamRoot();
             if (steamRoot == null)

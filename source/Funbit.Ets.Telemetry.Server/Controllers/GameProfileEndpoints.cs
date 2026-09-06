@@ -8,7 +8,7 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
     /// <summary>
     /// Endpoint helpers for the game profile API consumed by the mobile app's
     /// mods configuration screen. The state endpoint is cheap enough to poll:
-    /// it only reads in-memory state maintained by <see cref="GameLogWatcher"/>.
+    /// it only reads in-memory state maintained by <see cref="ProfileWatcher"/>.
     /// </summary>
     public static class GameProfileEndpoints
     {
@@ -19,17 +19,17 @@ namespace Funbit.Ets.Telemetry.Server.Controllers
 
         public static string GetStateJson(string game)
         {
-            var state = GameLogWatcher.GetState(game);
+            var state = ProfileWatcher.GetState(game);
             bool gameRunning = Ets2ProcessHelper.IsEts2Running &&
                 string.Equals(Ets2ProcessHelper.LastRunningGameName, game, StringComparison.OrdinalIgnoreCase);
 
             object activeProfile = null;
-            if (gameRunning && state.ActiveProfileName != null)
+            if (gameRunning && state.ActiveProfileId != null)
             {
                 activeProfile = new
                 {
-                    id = GameProfileScanner.EncodeHexName(state.ActiveProfileName),
-                    name = state.ActiveProfileName,
+                    id = state.ActiveProfileId,
+                    name = GameProfileScanner.TryDecodeHexName(state.ActiveProfileId),
                     type = state.ActiveProfileType,
                 };
             }
