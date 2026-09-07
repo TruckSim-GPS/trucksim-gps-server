@@ -48,8 +48,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable..."; Check: not IsVCRedistInstalled; Flags: waituntilterminated
-Filename: "{app}\TruckSimGPS_Server.exe"; Description: "Launch TruckSim GPS Telemetry Server"; Flags: nowait postinstall skipifsilent
-Filename: "{app}\TruckSimGPS_Server.exe"; Flags: nowait; Check: IsSilentInstall
+Filename: "{app}\TruckSimGPS_Server.exe"; Description: "Launch TruckSim GPS Telemetry Server"; Flags: nowait postinstall skipifsilent runasoriginaluser
+Filename: "{app}\TruckSimGPS_Server.exe"; Flags: nowait runasoriginaluser; Check: IsSilentInstall
 
 [UninstallRun]
 Filename: "netsh"; Parameters: "http delete urlacl url=http://+:31377/"; Flags: runhidden; RunOnceId: "RemoveUrlAcl"
