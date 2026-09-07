@@ -187,6 +187,20 @@ namespace Funbit.Ets.Telemetry.Server.Data
             return result;
         }
 
+        // Later mounts take priority in the game, so serve them first like the profile list.
+        internal static GameProfileMods GetMountedMods(string game, string id, string type, IEnumerable<string> files)
+        {
+            var result = new GameProfileMods
+            {
+                Id = id,
+                Name = TryDecodeHexName(id) ?? id,
+                Type = type,
+                Mods = files.Reverse().Select(f => DescribeMod(game, Path.GetFileNameWithoutExtension(f), "")).ToList()
+            };
+            LogModInventory(game, result);
+            return result;
+        }
+
         static void LogModInventory(string game, GameProfileMods result)
         {
             Log.InfoFormat("[{0}] Profile '{1}' ({2}): {3} mods, {4} missing, {5} fingerprinted, map_path '{6}'",

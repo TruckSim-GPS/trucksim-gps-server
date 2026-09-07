@@ -99,7 +99,10 @@ namespace Funbit.Ets.Telemetry.Server.Data
                     if (game != watched)
                     {
                         if (watched != null)
+                        {
+                            TruckersMpWatcher.Poll(watched);
                             Log.InfoFormat("[{0}] Game closed; stopped watching", watched);
+                        }
                         if (game != null)
                         {
                             _steamRoots = GameProfileScanner.GetSteamProfileRoots(game).ToList();
@@ -175,6 +178,8 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 changes.Add(string.Format("Profile '{0}' removed", pair.Value.Name));
             if (known.Count == 0 && found.Count > 0)
                 changes.Add(string.Format("Profiles found: {0}", found.Count));
+            if (TruckersMpWatcher.Poll(game))
+                changes.Add("TruckersMP state changed");
 
             var active = found.Values.OrderByDescending(p => p.ConfigWriteTime).FirstOrDefault();
             int revision;

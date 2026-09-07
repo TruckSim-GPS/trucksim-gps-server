@@ -113,6 +113,7 @@
     <Compile Include="Data\ScsTelemetryDataReader.cs" />
     <Compile Include="Data\TelemetryV1.cs" />
     <Compile Include="Data\ProfileWatcher.cs" />
+    <Compile Include="Data\TruckersMpWatcher.cs" />
     <Compile Include="Data\GameProfileScanner.cs" />
     <!-- Vendored SIIDecryptSharp (see SiiDecrypt\LICENSE) -->
     <Compile Include="SiiDecrypt\BSII_Decoder.cs" />
