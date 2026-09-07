@@ -54,7 +54,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
 
                 return new TelemetryV1
                 {
-                    ServerVersion = 5,
+                    ServerVersion = 6,
                     Game = game,
                     Truck = truck,
                     Trailers = trailers,

@@ -6,7 +6,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
     // Top-level REST v1 payload
     public class TelemetryV1
     {
-        public int ServerVersion { get; set; } = 5;
+        public int ServerVersion { get; set; } = 6;
         public GameV1 Game { get; set; }
         public TruckV1 Truck { get; set; }
         public List<TrailerV1> Trailers { get; set; }
