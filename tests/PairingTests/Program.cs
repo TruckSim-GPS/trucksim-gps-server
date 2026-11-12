@@ -44,6 +44,7 @@ namespace PairingTests
             Run("voice routes", () => VoiceRoutes().GetAwaiter().GetResult());
             Run("gps sync policy", GpsSyncPolicyRules);
             Run("gps sync press window", GpsSyncPressWindow);
+            Run("gps sync swallowed press", GpsSyncSwallowedPress);
             Run("gps sync plugin contract", GpsSyncContract);
             Run("save gps parser", SaveGpsParsing);
             Run("gps sync json", GpsSyncJson);

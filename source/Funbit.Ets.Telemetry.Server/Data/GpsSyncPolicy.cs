@@ -25,6 +25,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
         public static readonly TimeSpan GiveUpAfter = TimeSpan.FromSeconds(15);
         public static readonly TimeSpan SoftHold = TimeSpan.FromSeconds(10);
         public static readonly TimeSpan PressWindow = TimeSpan.FromSeconds(30);
+        public static readonly TimeSpan SwallowedPressWindow = TimeSpan.FromSeconds(5);
         public const int MaxPresses = 3;
         public const float JumpMeters = 1000f;
         public const float JumpRatio = 0.1f;
@@ -151,7 +152,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
                 return false;
             }
             bool canPress = s.AppConnected && (!s.OnJob || s.AppWantsGameRoute) && RouteUp && distance > 0f && settled && s.Now - EpochStart >= PressDelay
-                            && s.Now - _lastPress >= PressWindow;
+                            && (s.Now - _lastPress >= PressWindow || _pressSaveOwed && EpochStart > _lastPress && s.Now - _lastPress >= SwallowedPressWindow);
             if (!canPress)
                 return false;
             if (_presses == 0)
@@ -198,7 +199,7 @@ namespace Funbit.Ets.Telemetry.Server.Data
         public void SaveWritten(DateTime writtenAt, bool hasTarget)
         {
             bool earlierPress = _pressSaveOwed && EpochStart > _lastPress;
-            if (writtenAt > _lastPress)
+            if (writtenAt >= _lastPress)
                 _pressSaveOwed = false;
             if (hasTarget && writtenAt > EpochStart && !earlierPress)
                 _pending = false;

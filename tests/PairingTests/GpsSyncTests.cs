@@ -375,6 +375,35 @@ namespace PairingTests
             Check(d.Policy.Epoch == 3 && !d.Policy.Pending, "a lost press owes no save: the next save answers the epoch after it");
         }
 
+        static void GpsSyncSwallowedPress()
+        {
+            var d = Routed();
+            d.Run(100, 85000).Run(1000, 85000);
+            Check(d.Presses == 2, "an epoch presses");
+            d.Paused = true;
+            d.Run(1000, 85000);
+            d.Paused = false;
+            d.Run(3900, 85000);
+            Check(d.Policy.EpochReason == "resumed after a pause" && d.Presses == 2, "a press the game swallowed without a save: the next epoch waits 5 s after it");
+            d.Run(100, 85000);
+            Check(d.Presses == 3, "not the whole press window");
+            d.Run(29900, 85000);
+            Check(d.Presses == 3, "inside that epoch its retry still waits for the press window");
+            d.Run(100, 85000);
+            Check(d.Presses == 4, "and comes when it ends");
+
+            d = Routed();
+            d.Run(100, 85000).Run(1000, 85000);
+            d.Policy.PressLost();
+            d.Paused = true;
+            d.Run(1000, 85000);
+            d.Paused = false;
+            d.Run(28900, 85000);
+            Check(d.Presses == 2, "a press the game did not take still holds the next epoch for the press window");
+            d.Run(100, 85000);
+            Check(d.Presses == 3, "until it ends");
+        }
+
         static void GpsSyncContract()
         {
             var fields = typeof(GpsSyncZone).GetFields().OrderBy(f => (int)Marshal.OffsetOf(typeof(GpsSyncZone), f.Name)).ToList();
